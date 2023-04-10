@@ -21,6 +21,7 @@ namespace Myshop.ViewModel
             ObservableCollection<HomeItems> homeItems = new ObservableCollection<HomeItems>
             {
                 new HomeItems { HomeName = "This PC", HomeImage = @"images/back-image.png" },
+                new HomeItems { HomeName = "POPSOs PC", HomeImage = @"images/back-image.png" },
             };
 
             HomeItemsCollection = new CollectionViewSource { Source = homeItems };
