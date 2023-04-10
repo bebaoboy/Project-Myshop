@@ -1,0 +1,77 @@
+﻿<UserControl x:Class="Myshop.View.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Myshop.View"
+             xmlns:chartingToolkit="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:DVC="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=DotNetProjects.DataVisualization.Toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Grid.RowSpan="1" Background="AntiqueWhite">
+            <DatePicker Margin="10 10 20 10" d:Name="StartDate"></DatePicker>
+            <DatePicker Margin="10 10 20 10" Name="EndDate"></DatePicker>
+            <Button Content="Today" Margin="10 10 20 10" Name="todayButton"></Button>
+            <Button Content="Last 7 days" Margin="10 10 20 10" Name="last7Button"></Button>
+            <Button Content="Last 30 days" Margin="10 10 20 10" Name="last30Button"></Button>
+        </StackPanel>
+
+        <DVC:Chart Grid.Row="1"
+            Name="mcChart"    
+            Background="YellowGreen"  
+            Foreground="DarkBlue"  
+            Title="Gross Revenue"  />
+        <DVC:Chart Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
+            <DVC:Chart.Series>
+                <DVC:PieSeries Title="Experience" IndependentValueBinding="{Binding Path=Key}" DependentValueBinding="{Binding Path=Value}" Margin="10,-33,-12,-28">
+                </DVC:PieSeries>
+            </DVC:Chart.Series>
+        </DVC:Chart>
+        <Border Grid.Row="2" Style="{StaticResource mainBorder}" Background="AntiqueWhite">
+            <StackPanel>
+                <Label Content="Total counter"></Label>
+                <Label Content="Customers"></Label>
+                <TextBlock Text="1000"></TextBlock>
+                <Label Content="Stocks"></Label>
+                <TextBlock Text="1000"></TextBlock>
+            </StackPanel>
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding HomeSourceCollection}"
+                      Height="350"
+                      Width="650"
+                      HorizontalAlignment="Center"
+                      Margin="0,40,0,0">
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <RadioButton Content="{Binding HomeName}"
+                                 CommandParameter="{Binding HomeName}"
+                                 Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.ThisPCCommand}"
+                                 Tag="{Binding HomeImage}"
+                                 GroupName="HomeGroup" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="5"
+                                 Rows="3" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+        </ItemsControl>
+    </Grid>
+</UserControl>

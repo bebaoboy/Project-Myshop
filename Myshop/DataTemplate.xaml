@@ -1,0 +1,21 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:viewmodel="clr-namespace:Myshop.ViewModel"
+                    xmlns:view="clr-namespace:Myshop.View">
+
+    <DataTemplate DataType="{x:Type viewmodel:BookViewModel}">
+        <view:BookView/>
+    </DataTemplate>
+
+    <!--PC Page-->
+
+    <DataTemplate DataType="{x:Type viewmodel:DashBoardViewModel}">
+        <view:HomeView/>
+    </DataTemplate>
+
+    <!--Home Page-->
+
+    <DataTemplate DataType="{x:Type viewmodel:OrderViewModel}">
+        <view:HomeView/>
+    </DataTemplate>
+</ResourceDictionary>
