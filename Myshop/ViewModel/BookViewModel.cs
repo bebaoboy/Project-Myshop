@@ -3,12 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.Common;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Forms;
 using System.Windows.Input;
+using static System.Reflection.Metadata.BlobBuilder;
+using System.Collections;
 
 namespace Myshop.ViewModel
 {
@@ -19,12 +24,18 @@ namespace Myshop.ViewModel
         public ICollectionView BookSourceCollection => BookItemsCollection.View;
         public ICommand NextPageCommand { get; }
         public ICommand PrevPageCommand { get; }
+        public ICommand DeleteCommand { get; }
+        public ICommand EditCommand { get; }
+        public ICommand ViewDetailCommand { get; }
 
         int _currentPage = 1;
         int _rowsPerPage = 10;
         int _totalItems = 0;
         int _totalPages = 0;
         private string _keyword = "";
+
+        int _currentIndex = -1;
+
 
         ObservableCollection<Book> bookItems;
         private bool _nextPageEnabled = true;
@@ -118,6 +129,9 @@ namespace Myshop.ViewModel
             _updatePagingInfo();
             NextPageCommand = new ViewModelCommand(ExecuteNextPageCommand);
             PrevPageCommand = new ViewModelCommand(ExecutePrevPageCommand);
+            EditCommand = new ViewModelCommand(ExecuteEditCommand);
+            DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
+            ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
         }
 
         private void _updateDataSource(int page)
@@ -130,6 +144,7 @@ namespace Myshop.ViewModel
                 _currentPage, _rowsPerPage, _keyword);
             BookItemsCollection = new CollectionViewSource { Source = books };
             OnPropertyChanged(nameof(BookSourceCollection));
+            _updatePagingInfo();
             PageInfoText =
                 $"Displaying {books.Count} / {_totalItems} books.";
             if (ComboBoxCurrentPage == _totalPages - 1)
@@ -217,8 +232,50 @@ namespace Myshop.ViewModel
         }
         public void SelectionChanged(object sender, EventArgs e)
         {
-            ComboBox SelectBox = (ComboBox)sender;
+            System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
             _updateDataSource(SelectBox.SelectedIndex + 1);
+        }
+
+        public void ExcecuteViewDetailCommand(object obj)
+        {
+
+        }
+
+
+        public void ExecuteDeleteCommand(object obj)
+        {
+                        DialogResult dialogResult = MessageBox.Show("Chắc chắn?", "Xóa cuốn sách này chứ?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+
+                MenuItem menuItem = (MenuItem)obj;
+
+                int i = _currentIndex;
+                if (i == -1) return;
+                string sql = "delete from book where id = @id";
+                //var command = new SqlCommand(sql, _connection);
+                //command.Parameters.Add("@id", SqlDbType.Int).Value = books[i].id;
+
+                //int rows = command.ExecuteNonQuery();
+
+                //if (rows > 0)
+                //{
+                //    MessageBox.Show($"Book {books[i].title} is deleted");
+                //}
+                bookItems.RemoveAt(_currentIndex);
+                _updateDataSource(_currentPage);
+            }
+        }
+
+        public void ExecuteEditCommand(object obj)
+        {
+
+        }
+
+        public void ListSelectionChanged(object sender, EventArgs e)
+        {
+            System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
+            _currentIndex = SelectBox.SelectedIndex;
         }
     }
 }

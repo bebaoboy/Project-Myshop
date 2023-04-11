@@ -4,10 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
-             xmlns:local="clr-namespace:Myshop.View" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:local="clr-namespace:Myshop.View" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewModel="clr-namespace:Myshop.ViewModel"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
- 
+             d:DesignHeight="450" d:DesignWidth="800"
+             >
+    <UserControl.DataContext>
+        <viewModel:BookViewModel/>
+    </UserControl.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -53,31 +56,16 @@
         <Border Grid.Row="1"
                 CornerRadius="10" 
                 Padding="10">
-            <!--<DataGrid ColumnWidth="*"
-                  Background="{StaticResource color1}"
-                  BorderThickness="0">
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="Foreground" Value="{StaticResource color0}" />
-                        <Setter Property="Padding" Value="10,0,0,10" />
-                        <Setter Property="FontFamily" Value="Montserrat" />
-                        <Setter Property="FontSize" Value="15" />
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
-                <DataGrid.Columns>
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="ID"   HeaderStringFormat=""/>
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="First name"  />
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="Last name"  />
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="Phone"  />
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="Number"  />
-                    <DataGridTextColumn  Binding="{x:Null}" ClipboardContentBinding="{x:Null}" Header="Address"  />
-                </DataGrid.Columns>
-            </DataGrid>-->
-            <ListView ItemsSource="{Binding BookSourceCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" >
+            <ListView ItemsSource="{Binding BookSourceCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
+                      SelectionMode="Single">
+                <Behaviors:Interaction.Triggers>
+                    <Behaviors:EventTrigger EventName="SelectionChanged">
+                        <Behaviors:CallMethodAction MethodName="ListSelectionChanged" TargetObject="{Binding}" />
+                    </Behaviors:EventTrigger>
+                </Behaviors:Interaction.Triggers>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" Margin="0 10 0 10">
                             <!--<Image RenderOptions.BitmapScalingMode="HighQuality" Margin="0, 0, 5, 0" Width="100" Height="100" />-->
                             <!--Source="{Binding coverImage, Converter={StaticResource converter}}"-->
                             <TextBlock TextAlignment="Center" Height="100" MaxWidth="150" TextWrapping="Wrap">
@@ -93,23 +81,21 @@
                         <WrapPanel />
                     </ItemsPanelTemplate>
                 </ListView.ItemsPanel>
-                <!--<ListView.Resources>
-                    <ContextMenu x:Key="booksContextMenu">
-                        <MenuItem Header="View details" Click="viewdetailMenu_Click">
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="View details" Command="{Binding ViewDetailCommand}">
                             <MenuItem.Icon>
-                                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding coverImage, Converter={StaticResource converter}}"/>
+                                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding coverImage}"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="Delete" Click="deleteMenu_Click"/>
-                        <MenuItem Header="Edit"  Click="editMenu_Click"/>
+                        <MenuItem Header="Delete" Command="{Binding DeleteCommand}" CommandTarget="{Binding Path=PlacementTarget, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"/>
+                        <MenuItem Header="Edit"  Command="{Binding EditCommand}"/>
                     </ContextMenu>
-                </ListView.Resources>-->
+                </ListView.ContextMenu>
                 <!--<ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
                         <Setter Property="ContextMenu"
                             Value="{StaticResource booksContextMenu}"/>
-                        <EventSetter Event="MouseDoubleClick"
-                                 Handler="booksListView_MouseDoubleClick"/>
                     </Style>
                 </ListView.ItemContainerStyle>-->
             </ListView>
