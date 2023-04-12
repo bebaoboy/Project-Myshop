@@ -14,6 +14,15 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Collections;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
+using System.Drawing;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Myshop.ViewModel
 {
@@ -121,7 +130,7 @@ namespace Myshop.ViewModel
             bookItems = new ObservableCollection<Book>();
             for(int i = 0; i < 32; i++)
             {
-                bookItems.Add(new Book { title = "Book number " + i });
+                bookItems.Add(new Book { title = "Book number " + i});
             }
 
             BookItemsCollection = new CollectionViewSource { };
@@ -132,6 +141,7 @@ namespace Myshop.ViewModel
             EditCommand = new ViewModelCommand(ExecuteEditCommand);
             DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
             ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
+            ReadImageAsync();
         }
 
         private void _updateDataSource(int page)
@@ -139,12 +149,21 @@ namespace Myshop.ViewModel
             if (page >= _totalPages) page = _totalPages;
             if (page < 1) page = 1;
             _currentPage = page;
-            ComboBoxCurrentPage = _currentPage - 1;
             (var books, _totalItems) = GetAll(
                 _currentPage, _rowsPerPage, _keyword);
+            _totalPages = _totalItems / _rowsPerPage +
+       (_totalItems % _rowsPerPage == 0 ? 0 : 1);
             BookItemsCollection = new CollectionViewSource { Source = books };
             OnPropertyChanged(nameof(BookSourceCollection));
-            _updatePagingInfo();
+            if (ComboBoxItemsSource != null && _totalPages != ComboBoxItemsSource.Count)
+            {
+                _updatePagingInfo();
+                _currentPage = ComboBoxItemsSource.Count;
+                (books, _totalItems) = GetAll(
+                _currentPage, _rowsPerPage, _keyword);
+            }
+            ComboBoxCurrentPage = _currentPage - 1;
+
             PageInfoText =
                 $"Displaying {books.Count} / {_totalItems} books.";
             if (ComboBoxCurrentPage == _totalPages - 1)
@@ -167,8 +186,6 @@ namespace Myshop.ViewModel
 
         private void _updatePagingInfo()
         {
-            _totalPages = _totalItems / _rowsPerPage +
-                   (_totalItems % _rowsPerPage == 0 ? 0 : 1);
 
             // Cập nhật ComboBox
             var lines = new ObservableCollection<Tuple<int, int>>();
@@ -262,7 +279,7 @@ namespace Myshop.ViewModel
                 //{
                 //    MessageBox.Show($"Book {books[i].title} is deleted");
                 //}
-                bookItems.RemoveAt(_currentIndex);
+                bookItems.RemoveAt(10 * (_currentPage - 1) + _currentIndex);
                 _updateDataSource(_currentPage);
             }
         }
@@ -276,6 +293,50 @@ namespace Myshop.ViewModel
         {
             System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
             _currentIndex = SelectBox.SelectedIndex;
+        }
+
+        public async Task<System.Drawing.Image> ReadImageAsync()
+        {
+            System.Drawing.Image bm;
+            var client = new HttpClient();
+            //var request = new HttpRequestMessage(HttpMethod.Get, "https://api.imgur.com/3/image/8ABRUYt");
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/Book");
+            //request.Headers.Add("Authorization", "Client-ID d27c6e0f38aa239");
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                var r = await response.Content.ReadAsStringAsync();
+                var json = JsonNode.Parse(r);
+                var imgRequest = new WebClient();
+
+                var imgResponse = imgRequest.DownloadData(json[0]["image"].ToString());
+                using (var stream = new MemoryStream(imgResponse))
+                {
+                    bm = Bitmap.FromStream(stream);
+                    for(int i = 0; i < 32; i++)
+                    {
+                        bookItems[i].coverImage=ConvertToBitmapSource((Bitmap)bm);
+                    }
+                    _updateDataSource(_currentPage);
+                }
+            }
+            return bm;
+        }
+        public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
+        {
+            var bitmapData = bitmap.LockBits(
+                new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
+
+            var bitmapSource = BitmapSource.Create(
+                bitmapData.Width, bitmapData.Height,
+                bitmap.HorizontalResolution, bitmap.VerticalResolution,
+                PixelFormats.Bgr24, null,
+                bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+
+            bitmap.UnlockBits(bitmapData);
+
+            return bitmapSource;
         }
     }
 }

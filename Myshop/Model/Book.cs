@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Media;
 
 namespace Myshop.Model
 {
@@ -13,10 +15,19 @@ namespace Myshop.Model
             get; set;
         }
         
-        public string coverImage;
-        public string author;
-        public int publishedYear;
-        
+        public ImageSource coverImage
+        {
+            get; set;
+        }
+        public string author
+        {
+            get; set;
+        }
+        public int publishedYear
+        {
+            get; set;
+        }
+
 
         public Book Clone()
         {
