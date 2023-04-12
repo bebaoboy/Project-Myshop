@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Collections;
+using Myshop.View;
 
 namespace Myshop.ViewModel
 {
@@ -268,6 +269,13 @@ namespace Myshop.ViewModel
         }
 
         public void ExecuteEditCommand(object obj)
+        {
+            Book b = bookItems.ElementAt(_currentIndex);
+            EditView editView = new EditView(b);
+            editView.Show();
+        }
+
+        public void setUpdateBookData()
         {
 
         }

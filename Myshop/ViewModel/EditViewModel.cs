@@ -1,0 +1,86 @@
+﻿using Microsoft.Win32;
+using Myshop.Model;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Controls.DataVisualization;
+using System.Windows.Data;
+using System.Windows.Input;
+
+namespace Myshop.ViewModel
+{
+    public class EditViewModel: ViewModelBase
+    {
+        public ICommand UpdateInfoCommand;
+        public ICommand FindImageCommand;
+        private Book _currentBook = new Book();
+
+        public string Title
+        {
+            get { return _currentBook.title; }
+            set { _currentBook.title = value; }
+        }
+
+        public int PublishedYear
+        {
+            get { return _currentBook.publishedYear; }
+            set { _currentBook.publishedYear = value; }
+        }
+
+        public string Author
+        {
+            get { return _currentBook.author; }
+            set { _currentBook.author = value;}
+        }
+
+        public string CoverImage
+        {
+            get { return _currentBook.coverImage; }
+            set { _currentBook.coverImage = value; }
+        }
+
+        public EditViewModel() { }
+
+        public EditViewModel(Book b)
+        {
+            _currentBook = b;
+            UpdateInfoCommand = new ViewModelCommand(ExecuteUpdate);
+            FindImageCommand = new ViewModelCommand(ExecuteFind);
+        }
+
+
+        public void ExecuteUpdate(object obj)
+        {
+
+        }
+
+        public void ExecuteFind(object obj)
+        {
+            var browseDiaglog = new OpenFileDialog();
+            browseDiaglog.Multiselect = false;
+            browseDiaglog.Filter = "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *png)|*.jpg; *.jpeg; *.gif; *.bmp; *png";
+
+            if(browseDiaglog.ShowDialog() == true)
+            {
+                var fileName = browseDiaglog.FileName.Split("\\").Last();
+
+                try
+                {
+                    File.Copy(browseDiaglog.FileName, "./img/" + fileName, true);
+                }
+                catch (Exception ex)
+                {
+                    
+                }
+                
+
+                CoverImage = "./img/" + fileName;     
+            }
+        }
+    }
+}
