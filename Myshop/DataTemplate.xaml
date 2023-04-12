@@ -7,15 +7,14 @@
         <view:BookView/>
     </DataTemplate>
 
-    <!--PC Page-->
 
     <DataTemplate DataType="{x:Type viewmodel:DashBoardViewModel}">
         <view:HomeView/>
     </DataTemplate>
 
-    <!--Home Page-->
-
     <DataTemplate DataType="{x:Type viewmodel:OrderViewModel}">
         <view:HomeView/>
     </DataTemplate>
+    
+    
 </ResourceDictionary>

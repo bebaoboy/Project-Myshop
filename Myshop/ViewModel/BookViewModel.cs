@@ -23,6 +23,7 @@ using System.Text.Json.Nodes;
 using System.Drawing;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Myshop.View;
 
 namespace Myshop.ViewModel
 {
@@ -285,6 +286,13 @@ namespace Myshop.ViewModel
         }
 
         public void ExecuteEditCommand(object obj)
+        {
+            Book b = bookItems.ElementAt(_currentIndex);
+            EditView editView = new EditView(b);
+            editView.Show();
+        }
+
+        public void setUpdateBookData()
         {
 
         }
