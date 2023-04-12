@@ -24,8 +24,8 @@ namespace Myshop.Model
 
             }
         }
-        private string _coverImage;
-        public string coverImage
+        private ImageSource _coverImage;
+        public ImageSource coverImage
         {
             get
             {
@@ -52,19 +52,7 @@ namespace Myshop.Model
 
             }
         }
-        
-        public ImageSource coverImage
-        {
-            get; set;
-        }
-        public string author
-        {
-            get; set;
-        }
-        public int publishedYear
-        {
-            get; set;
-        }
+
 
         private int _publishedYear;
         public int publishedYear

@@ -280,14 +280,14 @@ namespace Myshop.ViewModel
                 //{
                 //    MessageBox.Show($"Book {books[i].title} is deleted");
                 //}
-                bookItems.RemoveAt(10 * (_currentPage - 1) + _currentIndex);
+                bookItems.RemoveAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
                 _updateDataSource(_currentPage);
             }
         }
 
         public void ExecuteEditCommand(object obj)
         {
-            Book b = bookItems.ElementAt(_currentIndex);
+            Book b = bookItems.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
             EditView editView = new EditView(b);
             editView.Show();
         }
@@ -315,17 +315,21 @@ namespace Myshop.ViewModel
                 response.EnsureSuccessStatusCode();
                 var r = await response.Content.ReadAsStringAsync();
                 var json = JsonNode.Parse(r);
-                var imgRequest = new WebClient();
+                var imgRequest = new HttpRequestMessage(HttpMethod.Get, json[0]["image"].ToString());
 
-                var imgResponse = imgRequest.DownloadData(json[0]["image"].ToString());
-                using (var stream = new MemoryStream(imgResponse))
+                using (var imgResponse = await client.SendAsync(imgRequest))
                 {
-                    bm = Bitmap.FromStream(stream);
-                    for(int i = 0; i < 32; i++)
+                    imgResponse.EnsureSuccessStatusCode();
+                    var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
+                    using (var stream = new MemoryStream(imgStream))
                     {
-                        bookItems[i].coverImage=ConvertToBitmapSource((Bitmap)bm);
+                        bm = Bitmap.FromStream(stream);
+                        for (int i = 0; i < 32; i++)
+                        {
+                            bookItems[i].coverImage = ConvertToBitmapSource((Bitmap)bm);
+                        }
+                        _updateDataSource(_currentPage);
                     }
-                    _updateDataSource(_currentPage);
                 }
             }
             return bm;

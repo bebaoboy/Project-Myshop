@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP
 D:\repos\Project-Myshop\Myshop\App.xaml
-11407045341
+11562691861
 
-51831758104
-194101785492
-MainWindow.xaml;
+25369829968
+214788194606
+DataTemplate.xaml;MainWindow.xaml;Styles\Buttons.xaml;Styles\Colors.xaml;Styles\Text.xaml;Styles\Windows.xaml;View\BookView.xaml;View\EditView.xaml;View\HomeView.xaml;View\LoginWindow.xaml;View\MainView.xaml;
 
 False
 

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows.Controls.DataVisualization;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Myshop.ViewModel
 {
@@ -23,25 +26,33 @@ namespace Myshop.ViewModel
         public string Title
         {
             get { return _currentBook.title; }
-            set { _currentBook.title = value; }
+            set { _currentBook.title = value;
+                OnPropertyChanged(nameof(Title));
+            }
         }
 
         public int PublishedYear
         {
             get { return _currentBook.publishedYear; }
-            set { _currentBook.publishedYear = value; }
+            set { _currentBook.publishedYear = value;
+                OnPropertyChanged(nameof(PublishedYear));
+            }
         }
 
         public string Author
         {
             get { return _currentBook.author; }
-            set { _currentBook.author = value;}
+            set { _currentBook.author = value;
+                OnPropertyChanged(nameof(Author));
+            }
         }
 
-        public string CoverImage
+        public ImageSource CoverImage
         {
             get { return _currentBook.coverImage; }
-            set { _currentBook.coverImage = value; }
+            set { _currentBook.coverImage = value;
+                OnPropertyChanged(nameof(CoverImage));
+            }
         }
 
         public EditViewModel() { }
@@ -77,9 +88,10 @@ namespace Myshop.ViewModel
                 {
                     
                 }
-                
 
-                CoverImage = "./img/" + fileName;     
+
+                //CoverImage = "./img/" + fileName;
+                CoverImage = BookViewModel.ConvertToBitmapSource((Bitmap)Bitmap.FromFile("./img/" + fileName));
             }
         }
     }
