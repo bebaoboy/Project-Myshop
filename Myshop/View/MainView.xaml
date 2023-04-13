@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         xmlns:viewModel="clr-namespace:Myshop.ViewModel"
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
-        Title="MainWindowView" Height="700" Width="1300"
+        Title="MainWindowView" Height="700" Width="1000"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         Background="Transparent"
@@ -78,7 +78,6 @@
                             </StackPanel>
                         </RadioButton>
 
-
                         <RadioButton Style="{StaticResource menuButton}"
                                  Tag="{StaticResource color1}"
                                  Command="{Binding ShowBookViewCommand}">
@@ -88,6 +87,11 @@
                             </StackPanel>
                         </RadioButton>
 
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                            <fa:IconImage Icon="FileImport" Style="{StaticResource menuButtonIcon}"></fa:IconImage>
+                               <Button Content="Import data" Command="{Binding ImportData}"/>
+                        </StackPanel>
                     </StackPanel>
 
                 </Border>

@@ -24,6 +24,8 @@ using System.Drawing;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Myshop.View;
+using System.Windows.Controls.DataVisualization;
+using Xceed.Wpf.Toolkit;
 
 namespace Myshop.ViewModel
 {
@@ -121,6 +123,37 @@ namespace Myshop.ViewModel
             }
         }
 
+        private string _currentName = "";
+
+        public string CurrentName
+        {
+            get { return _currentName; }
+            set
+            {
+                _currentName = value;
+              
+                OnPropertyChanged(nameof(CurrentName));
+            }
+        }
+
+        private int _currentAmount = 1;
+
+        public int CurrentAmount
+        {
+            get { return _currentAmount; }
+            set { _currentAmount = value;
+                OnPropertyChanged(nameof(CurrentAmount));
+            }
+        }
+
+        private string _currentPrice = "100.000";
+        public string CurrentPrice
+        {
+            get { return _currentPrice; }
+            set { _currentPrice = value;
+                OnPropertyChanged(nameof(CurrentName));
+            }
+        }
 
         /// <summary>
         /// 
@@ -262,7 +295,7 @@ namespace Myshop.ViewModel
 
         public void ExecuteDeleteCommand(object obj)
         {
-                        DialogResult dialogResult = MessageBox.Show("Chắc chắn?", "Xóa cuốn sách này chứ?", MessageBoxButtons.YesNo);
+            DialogResult dialogResult = System.Windows.Forms.MessageBox.Show("Chắc chắn?", "Xóa cuốn sách này chứ?", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
 
@@ -288,7 +321,9 @@ namespace Myshop.ViewModel
         public void ExecuteEditCommand(object obj)
         {
             Book b = bookItems.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
-            EditView editView = new EditView(b);
+            EditView editView = new EditView();
+            var editViewModel = new EditViewModel(b);
+            editView.DataContext = editViewModel;
             editView.Show();
         }
 
@@ -301,6 +336,10 @@ namespace Myshop.ViewModel
         {
             System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
             _currentIndex = SelectBox.SelectedIndex;
+
+            CurrentName = bookItems[_currentIndex].title;
+            CurrentPrice = "100.000";
+            CurrentAmount = 1;
         }
 
         public async Task<System.Drawing.Image> ReadImageAsync()

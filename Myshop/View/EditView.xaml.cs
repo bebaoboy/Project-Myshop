@@ -20,8 +20,7 @@ namespace Myshop.View
     /// </summary>
     public partial class EditView : Window
     {
-        public Book CurrentBook;
-        public EditView(Book b)
+        public EditView()
         {
             InitializeComponent();
         }

@@ -38,6 +38,21 @@ namespace Myshop.Model
 
             }
         }
+
+        private double _price;
+        public double price
+        {
+            get { return _price; }
+            set { _price = value; }
+        }
+
+        private string _imageBase64;
+        public string ImageBase64
+        {
+            get { return _imageBase64; }
+            set { _imageBase64 = value; }
+        }
+
         private string _author;
         public string author
         {

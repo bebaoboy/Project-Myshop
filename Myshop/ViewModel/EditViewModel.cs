@@ -39,6 +39,15 @@ namespace Myshop.ViewModel
             }
         }
 
+        public ImageSource CoverImage
+        {
+            get { return _currentBook.coverImage; }
+            set {
+                _currentBook.coverImage = value;
+                OnPropertyChanged(nameof(CoverImage));
+            }
+        }
+
         public string Author
         {
             get { return _currentBook.author; }
@@ -47,15 +56,10 @@ namespace Myshop.ViewModel
             }
         }
 
-        public ImageSource CoverImage
+        public EditViewModel()
         {
-            get { return _currentBook.coverImage; }
-            set { _currentBook.coverImage = value;
-                OnPropertyChanged(nameof(CoverImage));
-            }
-        }
 
-        public EditViewModel() { }
+        }
 
         public EditViewModel(Book b)
         {
@@ -72,7 +76,7 @@ namespace Myshop.ViewModel
 
         public void ExecuteFind(object obj)
         {
-            var browseDiaglog = new OpenFileDialog();
+            OpenFileDialog browseDiaglog = new OpenFileDialog();
             browseDiaglog.Multiselect = false;
             browseDiaglog.Filter = "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *png)|*.jpg; *.jpeg; *.gif; *.bmp; *png";
 
