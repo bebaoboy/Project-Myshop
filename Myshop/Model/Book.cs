@@ -81,6 +81,18 @@ namespace Myshop.Model
             }
         }
 
+        private int _amount = 10;
+        public int Amount
+        {
+            get { return _amount; }
+            set
+            {
+                _amount = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Amount)));
+
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public Book Clone()

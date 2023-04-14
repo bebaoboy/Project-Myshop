@@ -8,10 +8,41 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="BookImages\alantis.png" />
+    <None Remove="BookImages\benhdaday.png" />
+    <None Remove="BookImages\chungket.png" />
+    <None Remove="BookImages\dacnhantam.jpg" />
+    <None Remove="BookImages\dang.png" />
+    <None Remove="BookImages\dichoiboho.png" />
+    <None Remove="BookImages\dochettraitim.png" />
+    <None Remove="BookImages\duyen.png" />
+    <None Remove="BookImages\giolanhdaumua.jpg" />
+    <None Remove="BookImages\hoangtube.jpg" />
+    <None Remove="BookImages\infinity.png" />
+    <None Remove="BookImages\kinhvanhoa6.png" />
+    <None Remove="BookImages\letters.png" />
+    <None Remove="BookImages\logistics.png" />
+    <None Remove="BookImages\maze.png" />
+    <None Remove="BookImages\nguyenbinh.png" />
+    <None Remove="BookImages\nhagiakim.jpg" />
+    <None Remove="BookImages\phanlieu.png" />
+    <None Remove="BookImages\rangsutu.png" />
+    <None Remove="BookImages\sleep.png" />
+    <None Remove="BookImages\talktothepaw.png" />
+    <None Remove="BookImages\tantrodoi.png" />
+    <None Remove="BookImages\truyencotich.webp" />
+    <None Remove="BookImages\vo.png" />
+    <None Remove="data\BookStoreData.xlsx" />
     <None Remove="Images\back-image.png" />
     <None Remove="Images\key-icon.png" />
     <None Remove="Images\logo.png" />
     <None Remove="Images\user-icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="data\BookStoreData.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -20,11 +51,84 @@
     <PackageReference Include="FontAwesome.Sharp" Version="6.3.0" />
     <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
     <PackageReference Include="Imgur.API" Version="5.0.0" />
+    <PackageReference Include="IronXL.Excel" Version="2023.4.13" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="OxyPlot.Core" Version="2.1.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="BookImages\alantis.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\benhdaday.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\chungket.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\dacnhantam.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\dang.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\dichoiboho.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\dochettraitim.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\duyen.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\giolanhdaumua.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\hoangtube.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\infinity.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\kinhvanhoa6.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\letters.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\logistics.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\maze.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\nguyenbinh.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\nhagiakim.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\phanlieu.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\rangsutu.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\sleep.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\talktothepaw.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\tantrodoi.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\truyencotich.webp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BookImages\vo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\back-image.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

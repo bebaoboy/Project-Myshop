@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[5.0.0, )"
             },
+            "IronXL.Excel": {
+              "target": "Package",
+              "version": "[2023.4.13, )"
+            },
             "Microsoft.Xaml.Behaviors.Wpf": {
               "target": "Package",
               "version": "[1.1.39, )"

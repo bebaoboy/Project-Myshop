@@ -32,7 +32,7 @@ namespace Myshop.ViewModel
     public class BookViewModel: ViewModelBase
     {
         
-        private CollectionViewSource BookItemsCollection;
+        static private CollectionViewSource BookItemsCollection = new CollectionViewSource { };
         public ICollectionView BookSourceCollection => BookItemsCollection.View;
         public ICommand NextPageCommand { get; }
         public ICommand PrevPageCommand { get; }
@@ -49,7 +49,7 @@ namespace Myshop.ViewModel
         int _currentIndex = -1;
 
 
-        ObservableCollection<Book> bookItems;
+        static ObservableCollection<Book> bookItems = new ObservableCollection<Book>();
         private bool _nextPageEnabled = true;
 
         public bool NextPageEnabled
@@ -161,15 +161,13 @@ namespace Myshop.ViewModel
 
         public BookViewModel()
         {
-            bookItems = new ObservableCollection<Book>();
-            for(int i = 0; i < 32; i++)
-            {
-                bookItems.Add(new Book { title = "Book number " + i});
-            }
+            //for(int i = 0; i < 32; i++)
+            //{
+            //    bookItems.Add(new Book { title = "Book number " + i});
+            //}
 
-            BookItemsCollection = new CollectionViewSource { };
-            _updateDataSource(1);
-            _updatePagingInfo();
+            //_updateDataSource(1);
+            //_updatePagingInfo();
             NextPageCommand = new ViewModelCommand(ExecuteNextPageCommand);
             PrevPageCommand = new ViewModelCommand(ExecutePrevPageCommand);
             EditCommand = new ViewModelCommand(ExecuteEditCommand);
@@ -334,15 +332,16 @@ namespace Myshop.ViewModel
 
         public void ListSelectionChanged(object sender, EventArgs e)
         {
+            if (_currentIndex == -1) return;
             System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
             _currentIndex = SelectBox.SelectedIndex;
 
             CurrentName = bookItems[_currentIndex].title;
-            CurrentPrice = "100.000";
-            CurrentAmount = 1;
+            CurrentPrice = bookItems[_currentIndex].price + "";
+            CurrentAmount = bookItems[_currentIndex].Amount;
         }
 
-        public async Task<System.Drawing.Image> ReadImageAsync()
+        public async Task ReadImageAsync()
         {
             System.Drawing.Image bm;
             var client = new HttpClient();
@@ -353,25 +352,51 @@ namespace Myshop.ViewModel
             {
                 response.EnsureSuccessStatusCode();
                 var r = await response.Content.ReadAsStringAsync();
-                var json = JsonNode.Parse(r);
-                var imgRequest = new HttpRequestMessage(HttpMethod.Get, json[0]["image"].ToString());
-
-                using (var imgResponse = await client.SendAsync(imgRequest))
+                var json = JsonNode.Parse(r).AsArray();
+                if (bookItems.Count < json.Count)
                 {
-                    imgResponse.EnsureSuccessStatusCode();
-                    var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
-                    using (var stream = new MemoryStream(imgStream))
+                    bookItems.Clear();
+                }
+                for (int i = 0; i < json.Count; i++)
+                {
+                    var imgRequest = new HttpRequestMessage(HttpMethod.Get, json[i]["image"].ToString());
+
+                    using (var imgResponse = await client.SendAsync(imgRequest))
                     {
-                        bm = Bitmap.FromStream(stream);
-                        for (int i = 0; i < 32; i++)
+                        imgResponse.EnsureSuccessStatusCode();
+                        var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
+                        using (var stream = new MemoryStream(imgStream))
                         {
-                            bookItems[i].coverImage = ConvertToBitmapSource((Bitmap)bm);
+                            bm = Bitmap.FromStream(stream);
+                            try
+                            {
+                                var b = new Book()
+                                {
+                                    id = int.Parse(json[i]["id"].ToString()),
+                                    title = json[i]["title"].ToString(),
+                                    author = json[i]["author"].ToString(),
+                                    publishedYear = int.Parse(json[i]["datePublished"].ToString()),
+                                    Amount = int.Parse(json[i]["amount"].ToString()),
+                                    price = double.Parse(json[i]["price"].ToString()),
+                                    coverImage = ConvertToBitmapSource((Bitmap)bm)
+                                };
+                                if (i < bookItems.Count - 1)
+                                {
+                                    bookItems[i] = b;
+                                }
+                                else
+                                {
+                                    bookItems.Add(b);
+                                }
+                               
+                                _updateDataSource(_currentPage);
+                                _updatePagingInfo();
+                            }
+                            catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json); }
                         }
-                        _updateDataSource(_currentPage);
                     }
                 }
             }
-            return bm;
         }
         public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
         {

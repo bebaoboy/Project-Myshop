@@ -1,5 +1,4 @@
 ﻿
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using FontAwesome.Sharp;
 using IronXL;
 using Myshop.Model;
@@ -19,6 +18,9 @@ using System.Windows.Data;
 using System.Windows.Input;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Windows.Resources;
+using System.Windows;
 
 namespace Myshop.ViewModel
 {
@@ -33,7 +35,7 @@ namespace Myshop.ViewModel
         private ViewModelBase _currentChildView;
         private string _caption;
         private IconChar _icon;
-        private string fileName = "D:\\scr\\Windows\\Project-Myshop\\Myshop\\data\\BookStoreData.xlsx";
+        private string fileName = Directory.GetCurrentDirectory() + "/" + "data\\BookStoreData.xlsx";
 
         public ViewModelBase CurrentChildView
         {
@@ -185,43 +187,65 @@ namespace Myshop.ViewModel
 
             var bookRequest = "https://hcmusshop.azurewebsites.net/api/Book";
             var catRequest = "https://hcmusshop.azurewebsites.net/api/Category";
-            await SendPostRequestAsyncForBook(bookList, bookRequest);
+            //await SendPostRequestAsyncForBook(bookList, bookRequest);
             await SendPostRequestAsyncForCat(cateList, catRequest);
         }
 
 
         private string convertImageToBase64(string stringValue)
         {
-
-            byte[] imageArray = System.IO.File.ReadAllBytes("D:\\scr\\Windows\\Project-Myshop\\Myshop\\" + stringValue);
+            Uri uri = new Uri(stringValue, UriKind.Relative);
+            StreamResourceInfo info = Application.GetResourceStream(uri);
+            var imageArray = new BinaryReader(info.Stream).ReadBytes((int)info.Stream.Length);
             string base64ImageRepresentation = Convert.ToBase64String(imageArray);
             return base64ImageRepresentation;
         }
 
         public async Task SendPostRequestAsyncForBook(List<Book> listOb, string request)
-        { 
-            var json = JsonSerializer.Serialize(listOb);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+        {
+            foreach (var b in listOb)
+            {
+                var json = new JsonObject
+                {
+                    {"title", b.title },
+                    {"datePublished", b.publishedYear.ToString() },
+                    {"author", b.author },
+                    {"image", b.ImageBase64 },
+                    {"price", b.price },
+                    {"amount", b.Amount }
+                };
+                var content = new StringContent(JsonSerializer.Serialize(json), Encoding.Default, "application/json");
 
-            using var httpClient = new HttpClient();
-            using (var response = await httpClient.PostAsJsonAsync(request, content))
-            { 
-                var r = await response.Content.ReadAsStringAsync();
-                Caption = r.ToString();
-            }       
+                using var httpClient = new HttpClient();
+                using (var response = await httpClient.PostAsync(request, content))
+                {
+                    try
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var r = await response.Content.ReadAsStringAsync();
+                        Caption = r.ToString();
+                    } catch (Exception) { }
+                }
+            }
         }
 
         public async Task SendPostRequestAsyncForCat(List<Category> listOb, string request)
         {
-            var json = JsonSerializer.Serialize(listOb);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            using var httpClient = new HttpClient();
-            using (var response = await httpClient.PostAsync(request, content))
+            foreach (var c in listOb)
             {
-                response.EnsureSuccessStatusCode();
-                var r = await response.Content.ReadAsStringAsync();
-                Caption = r.ToString();
+                var json = JsonSerializer.Serialize(c);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using var httpClient = new HttpClient();
+                using (var response = await httpClient.PostAsync(request, content))
+                {
+                    try { 
+                        response.EnsureSuccessStatusCode();
+                        var r = await response.Content.ReadAsStringAsync();
+                        Caption = r.ToString();
+                    }
+                    catch (Exception) { }
+                }
             }
         }
 
