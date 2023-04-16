@@ -34,6 +34,9 @@ namespace Myshop.ViewModel
         
         static private CollectionViewSource BookItemsCollection = new CollectionViewSource { };
         public ICollectionView BookSourceCollection => BookItemsCollection.View;
+
+        static private CollectionViewSource CatItemsCollection = new CollectionViewSource { };
+        public ICollectionView CatSourceCollection => CatItemsCollection.View;
         public ICommand NextPageCommand { get; }
         public ICommand PrevPageCommand { get; }
         public ICommand DeleteCommand { get; }
@@ -50,6 +53,7 @@ namespace Myshop.ViewModel
 
 
         static ObservableCollection<Book> bookItems = new ObservableCollection<Book>();
+        static ObservableCollection<Category> catItems = new ObservableCollection<Category>();
         private bool _nextPageEnabled = true;
 
         public bool NextPageEnabled
@@ -174,6 +178,8 @@ namespace Myshop.ViewModel
             DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
             ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
             ReadImageAsync();
+            ReadAllCatAsync();
+
         }
 
         private void _updateDataSource(int page)
@@ -398,6 +404,41 @@ namespace Myshop.ViewModel
                 }
             }
         }
+
+        public async Task ReadAllCatAsync()
+        {
+            var client = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/Category");
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                var r = await response.Content.ReadAsStringAsync();
+                var json = JsonNode.Parse(r).AsArray();
+
+                if (catItems.Count < json.Count)
+                {
+                    catItems.Clear();
+                }
+                for (int i = 0; i < json.Count; i++)
+                {
+                    var c = new Category()
+                    {
+                        Id = int.Parse(json[i]["categoryId"].ToString()),
+                        Name = json[i]["categoryName"].ToString()
+                    };
+                    if(i < catItems.Count - 1)
+                    {
+                       catItems[i] = c;
+                    }
+                    else
+                    {
+                        catItems.Add(c);
+                    }
+                }
+            }
+            CatItemsCollection = new CollectionViewSource { Source = catItems };
+        }
+
         public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
         {
             var bitmapData = bitmap.LockBits(

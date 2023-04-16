@@ -12,12 +12,19 @@ namespace Myshop.Model
     {
         private string name;
 
+        private int id;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public string Name
         {
             get { return name; }
             set { name = value; }
+        }
+        public int Id
+        {
+            get { return id; }
+            set { id = value; }
         }
     }
 }
