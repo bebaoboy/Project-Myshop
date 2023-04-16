@@ -12,6 +12,8 @@ namespace Myshop.Model
     {
         private string name;
 
+        private int id = 1;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public string Name
@@ -19,7 +21,10 @@ namespace Myshop.Model
             get { return name; }
             set { name = value; }
         }
-
-        public int id = 1;
+        public int Id
+        {
+            get { return id; }
+            set { id = value; }
+        }
     }
 }
