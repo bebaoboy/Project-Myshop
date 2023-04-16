@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Media;
 
@@ -89,6 +90,18 @@ namespace Myshop.Model
             {
                 _amount = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Amount)));
+
+            }
+        }
+
+        private List<int> _categories = new();
+        public List<int> Categories
+        {
+            get { return _categories; }
+            set
+            {
+                _categories = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Categories)));
 
             }
         }

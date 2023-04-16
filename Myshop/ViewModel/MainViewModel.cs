@@ -176,6 +176,12 @@ namespace Myshop.ViewModel
                             case 4:
                                 book.price = cell.IntValue;
                                 break;
+                            case 5:
+                                book.Amount = cell.IntValue;
+                                break;
+                            case 6:
+                                book.Categories = cell.StringValue.Trim().Split(",").Select(x => int.Parse(x.Trim())).ToList();
+                                break;
                             default:
                                 cellCount = 0; break;
                         }
@@ -188,7 +194,7 @@ namespace Myshop.ViewModel
             var bookRequest = "https://hcmusshop.azurewebsites.net/api/Book";
             var catRequest = "https://hcmusshop.azurewebsites.net/api/Category";
             //await SendPostRequestAsyncForBook(bookList, bookRequest);
-            await SendPostRequestAsyncForCat(cateList, catRequest);
+            //await SendPostRequestAsyncForCat(cateList, catRequest);
         }
 
 
@@ -223,7 +229,20 @@ namespace Myshop.ViewModel
                     {
                         response.EnsureSuccessStatusCode();
                         var r = await response.Content.ReadAsStringAsync();
-                        Caption = r.ToString();
+                        var json2 = JsonNode.Parse(r);
+                        foreach (var c in b.Categories) {
+                            var bookId = int.Parse(json2["data"]["id"].ToString());
+                            var catObj = new JsonObject
+                            {
+                                { "bookId", bookId },
+                                { "categoryId", c }
+
+                            };
+                            var content2 = new StringContent(JsonSerializer.Serialize(catObj), Encoding.Default, "application/json");
+                            using var httpClient2 = new HttpClient();
+                            using var response2 = await httpClient2.PostAsync("https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks", content2);
+                        }
+                        Caption = "Uploaded: " + json["title"].ToString();
                     } catch (Exception) { }
                 }
             }

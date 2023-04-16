@@ -32,7 +32,7 @@
                         VerticalAlignment="Top"
                         Grid.Column="0">
                 <fa:IconImage Icon="Search" Height="20" Width="20" Foreground="{StaticResource plainTextColor3}"   />
-                <TextBox Text="Search..."   
+                <TextBox Text=""   
                     FontSize="13"
                          Height="24"
                            Width="300"
@@ -44,9 +44,16 @@
                              BorderBrush="{StaticResource plainTextColor3}"
                              BorderThickness="0,0,0,1"                             
                              VerticalContentAlignment="Center"
-                             Margin="5,5,0,0"></TextBox>
+                             Margin="5,5,0,0">
+                    <Behaviors:Interaction.Triggers>
+                        <Behaviors:EventTrigger EventName="TextChanged">
+                            <Behaviors:CallMethodAction MethodName="SearchTextChanged" TargetObject="{Binding}" />
+                        </Behaviors:EventTrigger>
+                    </Behaviors:Interaction.Triggers>
+                </TextBox>
             </StackPanel>
-            <Button            Width="120" 
+            <Button Visibility="Hidden"           
+                Width="120" 
                                Grid.Column="1"
                             Content="Search"                            
                             FontSize="12"
@@ -65,11 +72,14 @@
 
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Loại sản phẩm" Margin="50 0 0 0"></Label>
-                    <ComboBox ItemsSource="{Binding Path=CatSourceCollection}"
-                        DisplayMemberPath="Name"
-                        SelectedValuePath="Name"
-                        Width="150"/>
-                    <ComboBox/>
+                    <ComboBox ItemsSource="{Binding Path=CatSourceCollection}" SelectedIndex="{Binding CatIndex}" 
+                        Width="150">
+                        <Behaviors:Interaction.Triggers>
+                            <Behaviors:EventTrigger EventName="SelectionChanged">
+                                <Behaviors:CallMethodAction MethodName="CatSelectionChanged" TargetObject="{Binding}" />
+                            </Behaviors:EventTrigger>
+                        </Behaviors:Interaction.Triggers>
+                    </ComboBox>
                     <ComboBox SelectedIndex="{Binding ComboBoxRowPerPage}">
                         <ComboBoxItem Content="5" Tag="1" />
                         <ComboBoxItem Content="10" Tag="1" />
@@ -78,7 +88,7 @@
                         <ComboBoxItem Content="50" Tag="1" />
                         <Behaviors:Interaction.Triggers>
                             <Behaviors:EventTrigger EventName="SelectionChanged">
-                                <Behaviors:CallMethodAction MethodName="RSelectionChanged" TargetObject="{Binding}" />
+                                <Behaviors:CallMethodAction MethodName="RowPerPageSelectionChanged" TargetObject="{Binding}" />
                             </Behaviors:EventTrigger>
                         </Behaviors:Interaction.Triggers>
                     </ComboBox>
@@ -167,6 +177,8 @@
                 <TextBlock d:Text="Giá" Style="{StaticResource text}" Text="{Binding CurrentPrice}"/>
                 <Label Content="Số lượng" Style="{StaticResource labelBody}"/>
                 <TextBlock d:Text="Số lượng" Style="{StaticResource text}" Text="{Binding CurrentAmount}"/>
+                <Label Content="Thể loại sách" Style="{StaticResource labelBody}"/>
+                <TextBlock d:Text="Thể loại sách" Style="{StaticResource text}" Text="{Binding CurrentCategories}"/>
             </StackPanel>
         </Border>
     </Grid>

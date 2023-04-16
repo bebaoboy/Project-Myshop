@@ -71,6 +71,10 @@
             "OxyPlot.Core": {
               "target": "Package",
               "version": "[2.1.2, )"
+            },
+            "PixelFormatsConverter": {
+              "target": "Package",
+              "version": "[0.1.0, )"
             }
           },
           "imports": [

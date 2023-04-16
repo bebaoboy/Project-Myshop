@@ -26,6 +26,7 @@ using System.Windows.Media.Imaging;
 using Myshop.View;
 using System.Windows.Controls.DataVisualization;
 using Xceed.Wpf.Toolkit;
+using PixelFormatsConverter;
 
 namespace Myshop.ViewModel
 {
@@ -55,6 +56,7 @@ namespace Myshop.ViewModel
         static ObservableCollection<Book> bookItems = new ObservableCollection<Book>();
         static ObservableCollection<Category> catItems = new ObservableCollection<Category>();
         private bool _nextPageEnabled = true;
+        private List<Book> currentSearchResult = new();
 
         public bool NextPageEnabled
         {
@@ -187,6 +189,35 @@ namespace Myshop.ViewModel
             }
         }
 
+        private string _currentCategories = "";
+
+        public string CurrentCategories
+        {
+            get { return _currentCategories; }
+            set
+            {
+                _currentCategories = value;
+
+                OnPropertyChanged(nameof(CurrentCategories));
+            }
+        }
+
+        private int _catIndex = 0;
+
+        public int CatIndex
+        {
+            get
+            {
+                return _catIndex;
+            }
+
+            set
+            {
+                _catIndex = value;
+                OnPropertyChanged(nameof(CatIndex));
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -210,7 +241,7 @@ namespace Myshop.ViewModel
 
         }
 
-        private void _updateDataSource(int page)
+        private List<Book> _updateDataSource(int page)
         {
             if (page >= _totalPages) page = _totalPages;
             if (page < 1) page = 1;
@@ -224,9 +255,9 @@ namespace Myshop.ViewModel
             if (ComboBoxItemsSource != null && _totalPages != ComboBoxItemsSource.Count)
             {
                 _updatePagingInfo();
-                _currentPage = ComboBoxItemsSource.Count;
-                (books, _totalItems) = GetAll(
-                _currentPage, _rowsPerPage, _keyword);
+                //_currentPage = ComboBoxItemsSource.Count;
+                //(books, _totalItems) = GetAll(
+                //_currentPage, _rowsPerPage, _keyword);
             }
             ComboBoxCurrentPage = _currentPage - 1;
 
@@ -248,6 +279,7 @@ namespace Myshop.ViewModel
             {
                 PrevPageEnabled = true;
             }
+            return books;
         }
 
         private void _updatePagingInfo()
@@ -266,7 +298,26 @@ namespace Myshop.ViewModel
                 int currentPage = 1, int rowsPerPage = 10,
                 string keyword = "", bool? sortAsc = null)
         {
-            var list = bookItems.Where(
+            IEnumerable<Book> list;
+
+            if (CatIndex == 0)
+            {
+                list = bookItems;
+            }
+            else if (CatIndex == catItems.Count - 1)
+            {
+                list = bookItems.Where(
+                    item => item.Categories.Count == 0
+                );
+            }
+            else
+            {
+                list = bookItems.Where(
+                    item => item.Categories.Contains(CatIndex)
+                );
+            }
+
+            list = list.Where(
                 item => item.title.ToLower().Contains(keyword.ToLower())
             );
 
@@ -360,7 +411,7 @@ namespace Myshop.ViewModel
 
         public void ExecuteEditCommand(object obj)
         {
-            Book b = bookItems.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
+            Book b = currentSearchResult.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
             EditView editView = new EditView();
             var editViewModel = new EditViewModel(b);
             editView.DataContext = editViewModel;
@@ -379,11 +430,13 @@ namespace Myshop.ViewModel
 
             _currentIndex = SelectBox.SelectedIndex;
             var index = _rowsPerPage * (_currentPage - 1) + _currentIndex;
-
-            CurrentName = bookItems[index].title;
-            CurrentAuthor = bookItems[index].author;
-            CurrentPrice = bookItems[index].price + "";
-            CurrentAmount = bookItems[index].Amount;
+            if (index < 0 || index >= currentSearchResult.Count) return;
+            var bookItem = currentSearchResult[index];
+            CurrentName = bookItem.title;
+            CurrentAuthor = bookItem.author;
+            CurrentPrice = bookItem.price + "";
+            CurrentAmount = bookItem.Amount;
+            CurrentCategories = bookItem.Categories.Count == 0 ? "Chưa phân loại" : string.Join(", ", bookItem.Categories.Select(x => GetCategory(x)));
         }
 
         public async Task ReadImageAsync()
@@ -398,7 +451,7 @@ namespace Myshop.ViewModel
                 response.EnsureSuccessStatusCode();
                 var r = await response.Content.ReadAsStringAsync();
                 var json = JsonNode.Parse(r).AsArray();
-                if (bookItems.Count < json.Count)
+                if (bookItems.Count != json.Count)
                 {
                     bookItems.Clear();
                 }
@@ -415,15 +468,24 @@ namespace Myshop.ViewModel
                             bm = Bitmap.FromStream(stream);
                             try
                             {
+                                var bookId = int.Parse(json[i]["id"].ToString());
+                                using var httpClient2 = new HttpClient();
+                                var request2 = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks/getCategories/" + bookId);
+                                using var response2 = await httpClient2.SendAsync(request2);
+                                response2.EnsureSuccessStatusCode();
+                                var catArray = await response2.Content.ReadAsStringAsync();
+                                var json2 = JsonNode.Parse(catArray).AsArray();
+                                var cats = catArray.Length == 0 ? new List<int>() : json2.Select(x => (int)x).ToList();
                                 var b = new Book()
                                 {
-                                    id = int.Parse(json[i]["id"].ToString()),
+                                    id = bookId,
                                     title = json[i]["title"].ToString(),
                                     author = json[i]["author"].ToString(),
                                     publishedYear = int.Parse(json[i]["datePublished"].ToString()),
                                     Amount = int.Parse(json[i]["amount"].ToString()),
                                     price = int.Parse(json[i]["price"].ToString()),
-                                    coverImage = ConvertToBitmapSource((Bitmap)bm)
+                                    coverImage = ConvertToBitmapSource((Bitmap)bm),
+                                    Categories = cats
                                 };
                                 if (i <= bookItems.Count - 1)
                                 {
@@ -437,7 +499,7 @@ namespace Myshop.ViewModel
                                 _updateDataSource(_currentPage);
                                 _updatePagingInfo();
                             }
-                            catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json); }
+                            catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
                         }
                     }
                 }
@@ -454,10 +516,8 @@ namespace Myshop.ViewModel
                 var r = await response.Content.ReadAsStringAsync();
                 var json = JsonNode.Parse(r).AsArray();
 
-                if (catItems.Count < json.Count)
-                {
-                    catItems.Clear();
-                }
+                catItems.Clear();
+                
                 for (int i = 0; i < json.Count; i++)
                 {
                     var c = new Category()
@@ -465,7 +525,7 @@ namespace Myshop.ViewModel
                         Id = int.Parse(json[i]["categoryId"].ToString()),
                         Name = json[i]["categoryName"].ToString()
                     };
-                    if(i < catItems.Count - 1)
+                    if(i <= catItems.Count - 1)
                     {
                        catItems[i] = c;
                     }
@@ -474,8 +534,25 @@ namespace Myshop.ViewModel
                         catItems.Add(c);
                     }
                 }
+                catItems.Insert(0, new Category() { Name = "Tất cả sách" });
+                catItems.Add(new Category() { Name = "Chưa phân loại" });
+                CatItemsCollection = new CollectionViewSource { Source = catItems.Select(x => x.Name) };
+                OnPropertyChanged(nameof(CatSourceCollection));
             }
-            CatItemsCollection = new CollectionViewSource { Source = catItems };
+        }
+
+        public void CatSelectionChanged(object sender, EventArgs e)
+        {
+            System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
+            CatIndex = SelectBox.SelectedIndex;
+            currentSearchResult = _updateDataSource(_currentPage);
+        }
+
+        public void SearchTextChanged(object sender, EventArgs e)
+        {
+            var seachBar = (System.Windows.Controls.TextBox)sender;
+            _keyword = seachBar.Text;
+            currentSearchResult = _updateDataSource(_currentPage);
         }
 
         public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
@@ -483,16 +560,37 @@ namespace Myshop.ViewModel
             var bitmapData = bitmap.LockBits(
                 new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
                 System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
-
-            var bitmapSource = BitmapSource.Create(
-                bitmapData.Width, bitmapData.Height,
-                bitmap.HorizontalResolution, bitmap.VerticalResolution,
-                PixelFormats.Bgr24, null,
-                bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+            BitmapSource bitmapSource;
+            try
+            {
+                bitmapSource = BitmapSource.Create(
+                    bitmapData.Width, bitmapData.Height,
+                    bitmap.HorizontalResolution, bitmap.VerticalResolution,
+                    bitmap.PixelFormat.Convert(), null,
+                    bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+            } catch(Exception)
+            {
+                bitmapSource = BitmapSource.Create(
+                    bitmapData.Width, bitmapData.Height,
+                    bitmap.HorizontalResolution, bitmap.VerticalResolution,
+                    PixelFormats.Bgr24, null,
+                    bitmapData.Scan0, bitmapData.Stride * bitmapData.Height, bitmapData.Stride);
+            }
 
             bitmap.UnlockBits(bitmapData);
 
             return bitmapSource;
+        }
+
+        public static string GetCategory(int categoryId)
+        {
+            try
+            {
+                return catItems[categoryId].Name;
+            } catch (Exception)
+            {
+                return "";
+            }
         }
     }
 }
