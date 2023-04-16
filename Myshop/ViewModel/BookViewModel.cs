@@ -95,7 +95,22 @@ namespace Myshop.ViewModel
                 OnPropertyChanged(nameof(ComboBoxCurrentPage));
             }
         }
-        
+        private int _comboBoxRowPerPage = 1;
+
+        public int ComboBoxRowPerPage
+        {
+            get
+            {
+                return _comboBoxRowPerPage;
+            }
+
+            set
+            {
+                _comboBoxRowPerPage = value;
+                OnPropertyChanged(nameof(ComboBoxRowPerPage));
+            }
+        }
+
         private string _pageInfoText = "Displaying 10/30 books.";
         public string PageInfoText
         {
@@ -136,6 +151,19 @@ namespace Myshop.ViewModel
             }
         }
 
+        private string _currentAuthor = "";
+
+        public string CurrentAuthor
+        {
+            get { return _currentAuthor; }
+            set
+            {
+                _currentAuthor = value;
+
+                OnPropertyChanged(nameof(CurrentAuthor));
+            }
+        }
+
         private int _currentAmount = 1;
 
         public int CurrentAmount
@@ -151,7 +179,7 @@ namespace Myshop.ViewModel
         {
             get { return _currentPrice; }
             set { _currentPrice = value;
-                OnPropertyChanged(nameof(CurrentName));
+                OnPropertyChanged(nameof(CurrentPrice));
             }
         }
 
@@ -285,6 +313,14 @@ namespace Myshop.ViewModel
             _updateDataSource(SelectBox.SelectedIndex + 1);
         }
 
+        public void RowPerPageSelectionChanged(object sender, EventArgs e)
+        {
+            System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
+            ComboBoxRowPerPage = SelectBox.SelectedIndex;
+            _rowsPerPage = int.Parse((string)((ComboBoxItem)SelectBox.SelectedItem).Content);
+            _updateDataSource(_currentPage);
+        }
+
         public void ExcecuteViewDetailCommand(object obj)
         {
 
@@ -332,13 +368,16 @@ namespace Myshop.ViewModel
 
         public void ListSelectionChanged(object sender, EventArgs e)
         {
-            if (_currentIndex == -1) return;
             System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
-            _currentIndex = SelectBox.SelectedIndex;
+            if (SelectBox.SelectedIndex == -1) return;
 
-            CurrentName = bookItems[_currentIndex].title;
-            CurrentPrice = bookItems[_currentIndex].price + "";
-            CurrentAmount = bookItems[_currentIndex].Amount;
+            _currentIndex = SelectBox.SelectedIndex;
+            var index = _rowsPerPage * (_currentPage - 1) + _currentIndex;
+
+            CurrentName = bookItems[index].title;
+            CurrentAuthor = bookItems[index].author;
+            CurrentPrice = bookItems[index].price + "";
+            CurrentAmount = bookItems[index].Amount;
         }
 
         public async Task ReadImageAsync()
@@ -377,10 +416,10 @@ namespace Myshop.ViewModel
                                     author = json[i]["author"].ToString(),
                                     publishedYear = int.Parse(json[i]["datePublished"].ToString()),
                                     Amount = int.Parse(json[i]["amount"].ToString()),
-                                    price = double.Parse(json[i]["price"].ToString()),
+                                    price = int.Parse(json[i]["price"].ToString()),
                                     coverImage = ConvertToBitmapSource((Bitmap)bm)
                                 };
-                                if (i < bookItems.Count - 1)
+                                if (i <= bookItems.Count - 1)
                                 {
                                     bookItems[i] = b;
                                 }

@@ -233,8 +233,12 @@ namespace Myshop.ViewModel
         {
             foreach (var c in listOb)
             {
-                var json = JsonSerializer.Serialize(c);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var json = new JsonObject
+                {
+                    {"categoryName", c.Name }
+                }; 
+                var content = new StringContent(JsonSerializer.Serialize(json), Encoding.UTF8, "application/json");
 
                 using var httpClient = new HttpClient();
                 using (var response = await httpClient.PostAsync(request, content))

@@ -19,5 +19,7 @@ namespace Myshop.Model
             get { return name; }
             set { name = value; }
         }
+
+        public int id = 1;
     }
 }
