@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModel="clr-namespace:Myshop.ViewModel"
-        xmlns:local="clr-namespace:Myshop.View"
+        xmlns:local="clr-namespace:Myshop.View" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="LoginView" Height="550" Width="800"
         WindowStyle="None"
@@ -107,6 +107,7 @@
                                Margin="0,35,0,0"/>
 
                     <TextBox x:Name="txtUser"
+                             Text="{Binding Username ,Mode=TwoWay}"
                              Style="{StaticResource text0}"
                              CaretBrush="White"
                              BorderBrush="White"
@@ -114,13 +115,19 @@
                              Height="28"
                              VerticalContentAlignment="Center"
                              Margin="0,5,0,0"
-                             Padding="20,0,0,0">
+                             Padding="20,0,0,0"
+                             >
 
                         <TextBox.Background>
                             <ImageBrush ImageSource="/Images/user-icon.png"
                                         Stretch="None"
                                         AlignmentX="Left"/>
                         </TextBox.Background>
+                        <Behaviors:Interaction.Triggers>
+                            <Behaviors:EventTrigger EventName="TextChanged">
+                                <Behaviors:CallMethodAction MethodName="UsernameChanged" TargetObject="{Binding}" />
+                            </Behaviors:EventTrigger>
+                        </Behaviors:Interaction.Triggers>
                     </TextBox>
 
                     <TextBlock Text="Mật khẩu"
@@ -138,8 +145,13 @@
                              Height="28"
                              VerticalContentAlignment="Center"
                              Margin="0,5,0,0"
-                             Padding="20,0,0,0">
-
+                             Padding="20,0,0,0"
+                             >
+                        <Behaviors:Interaction.Triggers>
+                            <Behaviors:EventTrigger EventName="PasswordChanged">
+                                <Behaviors:CallMethodAction MethodName="PasswordChanged" TargetObject="{Binding}" />
+                            </Behaviors:EventTrigger>
+                        </Behaviors:Interaction.Triggers>
                         <PasswordBox.Background>
                             <ImageBrush ImageSource="/Images/key-icon.png"
                                         Stretch="None"
@@ -147,7 +159,8 @@
                         </PasswordBox.Background>
                     </PasswordBox>
 
-                    <Button x:Name="btnLogin"                          
+                    <Button x:Name="btnLogin" 
+                            Command="{Binding LoginCommand}"
                             BorderThickness="0"
                             Content="Đăng nhập"
                             Foreground="White"
@@ -186,6 +199,7 @@
                     </StackPanel>
 
                 </StackPanel>
+                <CheckBox IsChecked="{Binding RememberMe}" Command="{Binding CheckCommand}" Content="Nhớ mật khẩu" HorizontalAlignment="Left" Margin="285,374,0,0" Grid.Row="1" VerticalAlignment="Top" Foreground="White"/>
 
             </Grid>
 

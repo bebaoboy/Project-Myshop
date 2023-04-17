@@ -41,8 +41,8 @@ namespace Myshop.View
 
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
-            (new MainView()).Show();
-            this.Close();
+            //(new MainView()).Show();
+            //this.Close();
         }
     }
 }
