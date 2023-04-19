@@ -8,6 +8,27 @@ namespace Myshop.Model
 {
     public class Order
     {
+        private int id;
+        public int Id { get; set; }
+
+        private string customerName;
+        public string CustomerName
+        {
+            get { return customerName; }
+            set { customerName = value; }
+        }
+
+        private string phoneNumber;
+        public string PhoneNumber
+        {
+            get;set;
+        }
+
+        private string address;
+        public string Address
+        {
+            get;set;
+        }
 
         private string dateCreated;
         public string DateCreated 
@@ -24,11 +45,11 @@ namespace Myshop.Model
             set { _books = value; }
         }
 
-        private double _totalPrice;
-        public double TotalPrice
+        private double total;
+        public double Total
         {
-            get { return _totalPrice; }
-            set { _totalPrice = value; }
+            get { return total; }
+            set {  total = value; }
         }
     }
 }

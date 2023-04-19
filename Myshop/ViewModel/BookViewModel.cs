@@ -436,7 +436,7 @@ namespace Myshop.ViewModel
             CurrentAuthor = bookItem.author;
             CurrentPrice = bookItem.price + "";
             CurrentAmount = bookItem.Amount;
-            CurrentCategories = bookItem.Categories.Count == 0 ? "Chưa phân loại" : string.Join(", ", bookItem.Categories.Select(x => GetCategory(x)));
+            CurrentCategories = GetCategory(bookItem);
         }
 
         public async Task ReadImageAsync()
@@ -496,7 +496,7 @@ namespace Myshop.ViewModel
                                     bookItems.Add(b);
                                 }
                                
-                                _updateDataSource(_currentPage);
+                                currentSearchResult = _updateDataSource(_currentPage);
                                 _updatePagingInfo();
                             }
                             catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
@@ -582,15 +582,20 @@ namespace Myshop.ViewModel
             return bitmapSource;
         }
 
-        public static string GetCategory(int categoryId)
+        public static string GetCategory(Book bookItem)
         {
-            try
+            return bookItem.Categories.Count == 0 ? "Chưa phân loại" : string.Join(", ", bookItem.Categories.Select(x =>
             {
-                return catItems[categoryId].Name;
-            } catch (Exception)
-            {
-                return "";
-            }
+                try
+                {
+                    return catItems[x].Name;
+                }
+                catch (Exception)
+                {
+                    return "";
+                }
+            }));
+           
         }
     }
 }

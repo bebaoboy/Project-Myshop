@@ -18,18 +18,20 @@
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="350"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" HorizontalAlignment="Center" Width="500" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"/>
-                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <DatePicker Grid.Column="0" Grid.ColumnSpan="2" Margin="85,0,25,0"/>
-            <DatePicker Grid.Column="1" Margin="150,0,-150,0"/>
+            <DatePicker Grid.Column="0" VerticalAlignment="Center" Margin="20 0"/>
+            <DatePicker Grid.Column="1" VerticalAlignment="Center"  Margin="20 0" />  
+            <Button Content="Thêm đơn hàng" Command="{Binding}" Style="{StaticResource loginButton}" Grid.Column="2"/>
+
         </Grid>
-        <Button Grid.Column="1" Content="Thêm đơn hàng" Command="{Binding}"></Button>
         <Border Grid.Row="1"
                 CornerRadius="10" 
                 Padding="10">
@@ -44,12 +46,12 @@
                     </Behaviors:Interaction.Triggers>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Vertical" Margin="0 10 0 10">
+                            <StackPanel Orientation="Vertical" Margin="0 10 0 10" Background="Beige">
                                 <Image RenderOptions.BitmapScalingMode="HighQuality" Margin="0, 0, 5, 0" Width="100" Height="100" 
                             Source="{Binding coverImage}"/>
                                 <TextBlock TextAlignment="Center" MaxWidth="150" TextWrapping="Wrap">
                         <Run Text="{Binding DateCreated}" FontWeight="Bold" Foreground="Blue"/>
-                        <Run Text="{Binding TotalPrice}" Foreground="Red"/>
+                        <Run Text="{Binding Total}" Foreground="Red"/>
                                 </TextBlock>
                             </StackPanel>
                         </DataTemplate>
@@ -113,12 +115,12 @@
                 <StackPanel Orientation="Horizontal">
                     <StackPanel>
                         <Label Content="Người đặt" Style="{StaticResource labelBody}"/>
-                        <Label Content="{Binding userName}" d:Content="Huynh Minh Bao" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding CustomerName}" d:Content="Huynh Minh Bao" Style="{StaticResource labelBody}"/>
                     </StackPanel>
                     <StackPanel>
                         <Label Content="Thông tin giao hàng"/>
-                        <Label Content="{Binding userPhone}" Style="{StaticResource labelBody}"/>
-                        <Label Content="{Binding userAddress}" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding Phone}" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding Address}" Style="{StaticResource labelBody}"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -126,9 +128,9 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True" >
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Tên sách" Width="*" Binding="{Binding Title}"/>
-                        <DataGridTextColumn Header="Số lượng" Width="65" Binding="{Binding Amount}"/>
-                        <DataGridTextColumn Header="Giá tiền" Width="150" Binding="{Binding Price}"/>
+                        <DataGridTextColumn Header="Tên sách" Width="3*" Binding="{Binding Title}"/>
+                        <DataGridTextColumn Header="Số lượng" Width="*" Binding="{Binding Amount}"/>
+                        <DataGridTextColumn Header="Giá tiền" Width="*" Binding="{Binding Price}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
@@ -136,7 +138,7 @@
                     <Label Content="Tổng tiền"  Style="{StaticResource labelBody}"/>
                     <Label Content="{Binding CurrentTotalPrice}"  Style="{StaticResource labelBody}"/>
                 </StackPanel>
-                
+
             </StackPanel>
         </Border>
     </Grid>

@@ -56,6 +56,18 @@ namespace Myshop.ViewModel
             }
         }
 
+        public string Category
+        {
+            get
+            {
+                return BookViewModel.GetCategory(_currentBook);
+            }
+            set
+            {
+                
+            }
+        }
+
         public EditViewModel()
         {
 
