@@ -24,5 +24,10 @@ namespace Myshop.View
         {
             InitializeComponent();
         }
+
+        private void CartesianChart_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
