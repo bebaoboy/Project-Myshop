@@ -159,7 +159,7 @@
                         </PasswordBox.Background>
                     </PasswordBox>
 
-                    <Button x:Name="btnLogin" 
+                    <Button x:Name="btnLogin" TabIndex="0"
                             Command="{Binding LoginCommand}"
                             BorderThickness="0"
                             Content="Đăng nhập"

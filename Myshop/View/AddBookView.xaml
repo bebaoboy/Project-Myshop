@@ -3,21 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Myshop.View"
+        xmlns:local="clr-namespace:Myshop.View" xmlns:viewModel="clr-namespace:Myshop.ViewModel"
         mc:Ignorable="d"
         Title="AddBookView" Height="450" Width="800">
+
+    <Window.DataContext>
+        <viewModel:AddBookViewModel/>
+    </Window.DataContext>
+
     <StackPanel>
         <StackPanel Orientation="Horizontal">
             <Label Content="Tên sách: " Width="100"></Label>
-            <TextBox x:Name="bookName" d:Text="Tên sách" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="224"></TextBox>
+            <TextBox x:Name="bookName" Text="{Binding Title}" d:Text="Tên sách" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="224"></TextBox>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
             <Label Content="Tên tác giả: " Width="100"></Label>
-            <TextBox x:Name="bookAuthor" Text="{Binding Author}" d:Text="Tên sách" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="218"></TextBox>
+            <TextBox x:Name="bookAuthor" Text="{Binding Author}" d:Text="Tên tấc giả" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="218"></TextBox>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
             <Label Content="Năm phát hành: " Width="100"></Label>
             <TextBox x:Name="bookYear" Text="{Binding PublishedYear}" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="100"></TextBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <Label Content="Thể loại" />
+            <TextBox Text="{Binding Category}" IsReadOnly="False" FontWeight="Bold" BorderThickness="0" Width="492"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
             <Label Content="Bìa sách: " Width="100"></Label>
