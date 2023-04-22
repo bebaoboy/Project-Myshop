@@ -27,6 +27,7 @@ namespace Myshop.ViewModel
         public ICommand DeleteCommand { get; }
         public ICommand EditCommand { get; }
         public ICommand ViewDetailCommand { get; }
+        public ICommand OpenAddNewOrder { get; }
 
         int _currentPage = 1;
         int _rowsPerPage = 10;
@@ -172,6 +173,7 @@ namespace Myshop.ViewModel
             EditCommand = new ViewModelCommand(ExecuteEditCommand);
             DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
             ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
+            OpenAddNewOrder = new ViewModelCommand(ExecuteOpenAddOrderPageCommand);
 
             getOrderList();
             // ReadImageAsync();
@@ -363,6 +365,14 @@ namespace Myshop.ViewModel
             //var editViewModel = new EditViewModel();
             //editView.DataContext = editViewModel;
             //editView.Show();
+        }
+
+        public void ExecuteOpenAddOrderPageCommand(object ob)
+        {
+            AddOrderView addView = new AddOrderView();
+            var addOrderViewModel = new AddOrderViewModel();
+            addView.DataContext = addOrderViewModel;
+            addView.Show();
         }
 
         public void setUpdateBookData()

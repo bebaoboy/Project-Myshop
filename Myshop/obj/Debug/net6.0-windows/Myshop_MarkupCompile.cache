@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\repos\Project-Myshop\Myshop\obj\Debug\net6.0-windows\
+D:\scr\Windows\Project-Myshop\Myshop\obj\Debug\net6.0-windows\
 Myshop
 none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP
-D:\repos\Project-Myshop\Myshop\App.xaml
-11562691861
-
-231599869603
-214788194606
-DataTemplate.xaml;MainWindow.xaml;Styles\Buttons.xaml;Styles\Colors.xaml;Styles\Text.xaml;Styles\Windows.xaml;View\BookView.xaml;View\EditView.xaml;View\HomeView.xaml;View\LoginWindow.xaml;View\MainView.xaml;
+D:\scr\Windows\Project-Myshop\Myshop\App.xaml
+141331012790
+11107443102
+312021171029
+2211382359546
+DataTemplate.xaml;MainWindow.xaml;Styles\Buttons.xaml;Styles\Colors.xaml;Styles\Text.xaml;Styles\Windows.xaml;View\AddBookView.xaml;View\AddOrderView.xaml;View\BookView.xaml;View\EditView.xaml;View\HomeView.xaml;View\LoginWindow.xaml;View\MainView.xaml;View\OrderView.xaml;
 
 False
 

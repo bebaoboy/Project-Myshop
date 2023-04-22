@@ -19,6 +19,9 @@
     <Compile Update="View\MainView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="View\AddOrderView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="DataTemplate.xaml">
@@ -46,6 +49,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="View\MainView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\AddOrderView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

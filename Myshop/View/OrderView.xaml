@@ -29,7 +29,7 @@
             </Grid.ColumnDefinitions>
             <DatePicker Grid.Column="0" VerticalAlignment="Center" Margin="20 0"/>
             <DatePicker Grid.Column="1" VerticalAlignment="Center"  Margin="20 0" />  
-            <Button Content="Thêm đơn hàng" Command="{Binding}" Style="{StaticResource loginButton}" Grid.Column="2"/>
+            <Button Content="Thêm đơn hàng" Command="{Binding OpenAddNewOrder}" Style="{StaticResource loginButton}" Grid.Column="2"/>
 
         </Grid>
         <Border Grid.Row="1"
