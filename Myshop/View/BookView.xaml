@@ -32,7 +32,7 @@
                         VerticalAlignment="Top"
                         Grid.Column="0">
                 <fa:IconImage Icon="Search" Height="20" Width="20" Foreground="{StaticResource plainTextColor3}"   />
-                <TextBox Text=""   
+                <TextBox IsEnabled="{Binding EnableBookView}" Text=""   
                     FontSize="13"
                          Height="24"
                            Width="300"
@@ -64,7 +64,7 @@
                     Style="{StaticResource loginButton}"
                     VerticalAlignment="Top" Margin="0,6,0,0"
                                HorizontalAlignment="Left"/>
-            <Button Content="Thêm sách mới" Command="{Binding AddBookCommand}" Style="{StaticResource loginButton}" Grid.Column="1"/>
+            <Button IsEnabled="{Binding EnableBookView}" Content="Thêm sách mới" Command="{Binding AddBookCommand}" Style="{StaticResource loginButton}" Grid.Column="1"/>
         </Grid>
         <Border Grid.Row="1"
                 CornerRadius="10" 
@@ -73,7 +73,7 @@
 
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Loại sản phẩm" Margin="50 0 0 0"></Label>
-                    <ComboBox ItemsSource="{Binding Path=CatSourceCollection}" SelectedIndex="{Binding CatIndex}" 
+                    <ComboBox IsEnabled="{Binding EnableBookView}" ItemsSource="{Binding Path=CatSourceCollection}" SelectedIndex="{Binding CatIndex}" 
                         Width="150">
                         <Behaviors:Interaction.Triggers>
                             <Behaviors:EventTrigger EventName="SelectionChanged">
@@ -81,7 +81,7 @@
                             </Behaviors:EventTrigger>
                         </Behaviors:Interaction.Triggers>
                     </ComboBox>
-                    <ComboBox SelectedIndex="{Binding ComboBoxRowPerPage}">
+                    <ComboBox IsEnabled="{Binding EnableBookView}" SelectedIndex="{Binding ComboBoxRowPerPage}">
                         <ComboBoxItem Content="5" Tag="1" />
                         <ComboBoxItem Content="10" Tag="1" />
                         <ComboBoxItem Content="15" Tag="1" />
@@ -95,7 +95,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <ListView ItemsSource="{Binding BookSourceCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
+                <ListView IsEnabled="{Binding EnableBookView}" ItemsSource="{Binding BookSourceCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
                       SelectionMode="Single" Height="441">
                     <Behaviors:Interaction.Triggers>
                         <Behaviors:EventTrigger EventName="SelectionChanged">
@@ -145,7 +145,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button x:Name="btnPrev" Command="{Binding PrevPageCommand}" Content="Previous Page" IsEnabled="{Binding PrevPageEnabled}" VerticalAlignment="Center"/>
 
-                <ComboBox Margin="50 0" ItemsSource="{Binding ComboBoxItemsSource}" SelectedIndex="{Binding ComboBoxCurrentPage}" Name="currentPageComboBox" HorizontalAlignment="Left" VerticalAlignment="Center" Width="103">
+                <ComboBox Margin="50 0" IsEnabled="{Binding EnableBookView}" ItemsSource="{Binding ComboBoxItemsSource}" SelectedIndex="{Binding ComboBoxCurrentPage}" Name="currentPageComboBox" HorizontalAlignment="Left" VerticalAlignment="Center" Width="103">
                     <Behaviors:Interaction.Triggers>
                         <Behaviors:EventTrigger EventName="SelectionChanged">
                             <Behaviors:CallMethodAction MethodName="SelectionChanged" TargetObject="{Binding}" />

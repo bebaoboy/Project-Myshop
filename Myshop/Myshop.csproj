@@ -52,6 +52,7 @@
     <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
     <PackageReference Include="Imgur.API" Version="5.0.0" />
     <PackageReference Include="IronXL.Excel" Version="2023.4.13" />
+    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="OxyPlot.Core" Version="2.1.2" />
     <PackageReference Include="PixelFormatsConverter" Version="0.1.0" />

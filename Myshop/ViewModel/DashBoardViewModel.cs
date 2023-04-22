@@ -10,7 +10,9 @@ using System.Drawing;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Myshop.ViewModel
@@ -18,7 +20,7 @@ namespace Myshop.ViewModel
     
     public class DashBoardViewModel: ViewModelBase
     {
-        private enum ProfitType
+        public enum ProfitType
         {
             date = 1,
             month = 2,
@@ -42,8 +44,44 @@ namespace Myshop.ViewModel
             }
         }
 
-        private CollectionViewSource RunningOutItemsSource = new CollectionViewSource { };
+        private int _chartStep = 1;
+        public int ChartStep
+        {
+            get { return _chartStep; }
+            set
+            {
+                _chartStep = value;
+                OnPropertyChanged(nameof(ChartStep));
+            }
+        }
+
+        private DateTime _dateMax = DateTime.Today;
+        public DateTime DateMax
+        {
+            get { return _dateMax; }
+            set
+            {
+                _dateMax = value;
+                OnPropertyChanged(nameof(DateMax));
+            }
+        }
+        private DateTime DateEnd = DateTime.Today;
+
+        private DateTime _dateMin = DateTime.MinValue;
+
+        public DateTime DateMin
+        {
+            get { return _dateMin; }
+            set
+            {
+                _dateMin = value;
+                OnPropertyChanged(nameof(DateMin));
+            }
+        }
+
+        public CollectionViewSource RunningOutItemsSource = new CollectionViewSource { };
         public ICollectionView RunningOutCollection => RunningOutItemsSource.View;
+        private ProfitType _profitType = ProfitType.date;
 
         private int totalBooks;
         public int TotalBooks { get; set; }
@@ -61,16 +99,72 @@ namespace Myshop.ViewModel
         }
 
         private List<string> xLabels;
-        public List<string> XLabels { get; set; }   
+        public List<string> XLabels { get; set; }  
+        public ICommand ChartTodayCommand { get; }
+        public ICommand ChartWeekCommand { get; }
+        public ICommand ChartMonthCommand { get; }
+        public ICommand ChartYearCommand { get; }
         public DashBoardViewModel()
         {
-            getProfit("", (int)ProfitType.date);
+            getProfit("", _profitType);
             getNumBook();
             getNumOrder();
             getOutOfStock();
+            ChartTodayCommand = new ViewModelCommand(ExecuteChartDate);
+            ChartMonthCommand = new ViewModelCommand(ExecuteChartMonth);
+            ChartYearCommand = new ViewModelCommand(ExecuteChartYear);
+            ChartWeekCommand = new ViewModelCommand(ExecuteChartWeek);
         }
 
-        public async Task getProfit(string date, int typeProfit)
+        public void ExecuteChartDate(object obj)
+        {
+            _profitType = ProfitType.date;
+            DateMin = DateMax = DateEnd = DateTime.Today;
+            ChartStep = 1;
+            getProfit("", _profitType);
+        }
+
+        public void ExecuteChartMonth(object obj)
+        {
+            _profitType = ProfitType.month;
+            ChartStep = 2;
+            getProfit("", _profitType);
+        }
+
+        public void ExecuteChartYear(object obj)
+        {
+            _profitType = ProfitType.year;
+            ChartStep = 1;
+            getProfit("", _profitType);
+        }
+
+        public void ExecuteChartWeek(object obj)
+        {
+            _profitType = ProfitType.week;
+            ChartStep = 1;
+            getProfit("", _profitType);
+        }
+
+        public void CalendarChanged(object sender, EventArgs e)
+        {
+            var picker = (DatePicker)sender;
+            DateMin = picker.SelectedDate ?? DateTime.Today;
+            _profitType = ProfitType.date;
+            ChartStep = 1;
+            getProfit("", _profitType);
+        }
+
+        public void CalendarSet(object sender, EventArgs e)
+        {
+            var picker = (DatePicker)sender;
+            DateEnd = picker.SelectedDate ?? DateTime.Today;
+            DateMin = DateTime.MinValue;
+            _profitType = ProfitType.date;
+            ChartStep = 1;
+            getProfit("", _profitType);
+        }
+
+        public async Task getProfit(string date, ProfitType typeProfit)
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/Order");
@@ -80,19 +174,24 @@ namespace Myshop.ViewModel
                 var r = await response.Content.ReadAsStringAsync();
                 var json = JsonNode.Parse(r).AsArray();
 
-                List<decimal> orderTotal = new();
                 DateTime currentDate = DateTime.Today;
                 ChartValues<Decimal> decimals = new();
                 Dictionary<string, int> soldItems = new();
-                if (typeProfit == (int)ProfitType.date)
+                if (typeProfit == ProfitType.date)
                 {
-                    for(int i = 0; i < json.Count; i++)
+                    Dictionary<string, decimal> orderTotal = new();
+
+                    for (int i = 0; i < json.Count; i++)
                     {
                         string dateString = json[i]["dateCreated"].ToString();
                         DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
-                        if(DateTime.Compare(currentDate, orderCreatedDate) >= 0)
+                        if(DateTime.Compare(DateMin, orderCreatedDate) <= 0 && DateTime.Compare(orderCreatedDate, DateEnd) <= 0)
                         {
-                            orderTotal.Add(decimal.Parse(json[i]["total"].ToString()));
+                            if (orderTotal.ContainsKey(dateString))
+                            {
+                                orderTotal[dateString] += decimal.Parse(json[i]["total"].ToString());
+                            }
+                            else orderTotal.Add(dateString, decimal.Parse(json[i]["total"].ToString()));
                             var jsonArray = json[i]["orderDetail"].AsArray();
                             foreach (var item in jsonArray)
                             {
@@ -111,11 +210,17 @@ namespace Myshop.ViewModel
                         }
                     }
 
-                    foreach(var item in orderTotal)
+                    foreach(var item in orderTotal.Values)
                     {
                         decimals.Add(item);
                     }
-
+                    if (decimals.Count == 0)
+                    {
+                        var amount = 0;
+                        soldItems["None"] = 10;
+                        decimals.Add((int)100000);
+                    }
+                    TopSoldCollection.Clear();
                     foreach (var solditem in soldItems)
                     {
                         var key = solditem.Key;
@@ -143,15 +248,19 @@ namespace Myshop.ViewModel
 
 
                     XTitle = "Giờ";
-                    XLabels = new List<string>(){ "12:00", "13:01", "16:00" };
+                    XLabels = new List<string>(orderTotal.Keys);
                     
                     OnPropertyChanged(nameof(XTitle));
                     OnPropertyChanged(nameof(XLabels));
                 }
-                else if(typeProfit == (int)ProfitType.month)
+                else if(typeProfit == ProfitType.month)
                 {
                     int currentMonth = currentDate.Month;
                     Dictionary<int, decimal> dailyProfit = new();
+                    for (int i = 1; i <= DateTime.DaysInMonth(currentDate.Year, currentMonth); i++)
+                    {
+                        dailyProfit[i] = 0;
+                    }
                     for (int i = 0; i < json.Count; i++)
                     {
                         string dateString = json[i]["dateCreated"].ToString();
@@ -172,12 +281,13 @@ namespace Myshop.ViewModel
 
                     foreach (var item in dailyProfit.Values)
                     {
-                        decimals.Add(item);
+                        decimals.Add((int)item);
                     }
 
 
                     ProfitCollection = new SeriesCollection {
                                 new ColumnSeries{
+                                    DataLabels = true,
                                     Values = decimals,
                                     Title = "Doanh thu theo tháng"
                                 }
@@ -197,10 +307,14 @@ namespace Myshop.ViewModel
                     OnPropertyChanged(nameof(XTitle));
                     OnPropertyChanged(nameof(XLabels));
                 }
-                else if(typeProfit == (int)ProfitType.year)
+                else if(typeProfit == ProfitType.year)
                 {
                     int currentYear = currentDate.Year;
                     Dictionary<int, decimal> monthlyProfit = new();
+                    for(int i = 1; i <= 12; i++)
+                    {
+                        monthlyProfit[i] = 0;
+                    }
                     for (int i = 0; i < json.Count; i++)
                     {
                         string dateString = json[i]["dateCreated"].ToString();
@@ -221,12 +335,13 @@ namespace Myshop.ViewModel
 
                     foreach (var item in monthlyProfit.Values)
                     {
-                        decimals.Add(item);
+                        decimals.Add((int)item);
                     }
 
 
                     ProfitCollection = new SeriesCollection {
                                 new ColumnSeries{
+                                    DataLabels = true,
                                     Values = decimals,
                                     Title = "Doanh thu theo năm"
                                 }

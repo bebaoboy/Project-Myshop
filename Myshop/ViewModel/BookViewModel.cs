@@ -43,6 +43,7 @@ namespace Myshop.ViewModel
         public ICommand DeleteCommand { get; }
         public ICommand EditCommand { get; }
         public ICommand ViewDetailCommand { get; }
+        public ICommand AddBookCommand { get; }
 
         int _currentPage = 1;
         int _rowsPerPage = 10;
@@ -55,8 +56,25 @@ namespace Myshop.ViewModel
 
         static ObservableCollection<Book> bookItems = new ObservableCollection<Book>();
         static ObservableCollection<Category> catItems = new ObservableCollection<Category>();
-        private bool _nextPageEnabled = true;
         private List<Book> currentSearchResult = new();
+
+        private bool _enableBookView = false;
+
+        public bool EnableBookView
+        {
+            get
+            {
+                return _enableBookView;
+            }
+
+            set
+            {
+                _enableBookView = value;
+                OnPropertyChanged(nameof(EnableBookView));
+            }
+        }
+
+        private bool _nextPageEnabled = false;
 
         public bool NextPageEnabled
         {
@@ -71,7 +89,7 @@ namespace Myshop.ViewModel
                 OnPropertyChanged(nameof(NextPageEnabled));
             }
         }
-        private bool _prevPageEnabled = true;
+        private bool _prevPageEnabled = false;
 
         public bool PrevPageEnabled
         {
@@ -117,7 +135,7 @@ namespace Myshop.ViewModel
             }
         }
 
-        private string _pageInfoText = "Displaying 10/30 books.";
+        private string _pageInfoText = "Displaying";
         public string PageInfoText
         {
             get
@@ -170,7 +188,7 @@ namespace Myshop.ViewModel
             }
         }
 
-        private int _currentAmount = 1;
+        private int _currentAmount = 0;
 
         public int CurrentAmount
         {
@@ -180,7 +198,7 @@ namespace Myshop.ViewModel
             }
         }
 
-        private string _currentPrice = "100.000";
+        private string _currentPrice = "";
         public string CurrentPrice
         {
             get { return _currentPrice; }
@@ -236,6 +254,7 @@ namespace Myshop.ViewModel
             EditCommand = new ViewModelCommand(ExecuteEditCommand);
             DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
             ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
+            AddBookCommand = new ViewModelCommand(ExecuteAddBookCommand);
             ReadImageAsync();
             ReadAllCatAsync();
 
@@ -367,7 +386,7 @@ namespace Myshop.ViewModel
         public void SelectionChanged(object sender, EventArgs e)
         {
             System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
-            _updateDataSource(SelectBox.SelectedIndex + 1);
+            currentSearchResult = _updateDataSource(SelectBox.SelectedIndex + 1);
         }
 
         public void RowPerPageSelectionChanged(object sender, EventArgs e)
@@ -375,7 +394,7 @@ namespace Myshop.ViewModel
             System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
             ComboBoxRowPerPage = SelectBox.SelectedIndex;
             _rowsPerPage = int.Parse((string)((ComboBoxItem)SelectBox.SelectedItem).Content);
-            _updateDataSource(_currentPage);
+            currentSearchResult = _updateDataSource(1);
         }
 
         public void ExcecuteViewDetailCommand(object obj)
@@ -411,11 +430,19 @@ namespace Myshop.ViewModel
 
         public void ExecuteEditCommand(object obj)
         {
-            Book b = currentSearchResult.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
+            Book b = currentSearchResult.ElementAt(_currentIndex);
             EditView editView = new EditView();
             var editViewModel = new EditViewModel(b);
             editView.DataContext = editViewModel;
             editView.Show();
+        }
+
+        public void ExecuteAddBookCommand(object obj)
+        {
+            var addView = new AddBookView();
+            var addViewModel = new AddBookViewModel();
+            addView.DataContext = addViewModel;
+            addView.Show();
         }
 
         public void setUpdateBookData()
@@ -429,7 +456,8 @@ namespace Myshop.ViewModel
             if (SelectBox.SelectedIndex == -1) return;
 
             _currentIndex = SelectBox.SelectedIndex;
-            var index = _rowsPerPage * (_currentPage - 1) + _currentIndex;
+            //var index = _rowsPerPage * (_currentPage - 1) + _currentIndex;
+            var index = _currentIndex;
             if (index < 0 || index >= currentSearchResult.Count) return;
             var bookItem = currentSearchResult[index];
             CurrentName = bookItem.title;
@@ -455,55 +483,81 @@ namespace Myshop.ViewModel
                 {
                     bookItems.Clear();
                 }
+                else
+                {
+                    currentSearchResult = _updateDataSource(_currentPage);
+                    _updatePagingInfo();
+                    EnableBookView = true;
+                    await ReadImage();
+                    return;
+                }
                 for (int i = 0; i < json.Count; i++)
                 {
-                    var imgRequest = new HttpRequestMessage(HttpMethod.Get, json[i]["image"].ToString());
 
-                    using (var imgResponse = await client.SendAsync(imgRequest))
+                    try
                     {
-                        imgResponse.EnsureSuccessStatusCode();
-                        var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
-                        using (var stream = new MemoryStream(imgStream))
+                        var bookId = int.Parse(json[i]["id"].ToString());
+                        using var httpClient2 = new HttpClient();
+                        var request2 = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks/getCategories/" + bookId);
+                        using var response2 = await httpClient2.SendAsync(request2);
+                        response2.EnsureSuccessStatusCode();
+                        var catArray = await response2.Content.ReadAsStringAsync();
+                        var json2 = JsonNode.Parse(catArray).AsArray();
+                        var cats = catArray.Length == 0 ? new List<int>() : json2.Select(x => (int)x).ToList();
+                        var b = new Book()
                         {
-                            bm = Bitmap.FromStream(stream);
-                            try
-                            {
-                                var bookId = int.Parse(json[i]["id"].ToString());
-                                using var httpClient2 = new HttpClient();
-                                var request2 = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks/getCategories/" + bookId);
-                                using var response2 = await httpClient2.SendAsync(request2);
-                                response2.EnsureSuccessStatusCode();
-                                var catArray = await response2.Content.ReadAsStringAsync();
-                                var json2 = JsonNode.Parse(catArray).AsArray();
-                                var cats = catArray.Length == 0 ? new List<int>() : json2.Select(x => (int)x).ToList();
-                                var b = new Book()
-                                {
-                                    id = bookId,
-                                    title = json[i]["title"].ToString(),
-                                    author = json[i]["author"].ToString(),
-                                    publishedYear = int.Parse(json[i]["datePublished"].ToString()),
-                                    Amount = int.Parse(json[i]["amount"].ToString()),
-                                    price = int.Parse(json[i]["price"].ToString()),
-                                    coverImage = ConvertToBitmapSource((Bitmap)bm),
-                                    Categories = cats
-                                };
-                                if (i <= bookItems.Count - 1)
-                                {
-                                    bookItems[i] = b;
-                                }
-                                else
-                                {
-                                    bookItems.Add(b);
-                                }
-                               
-                                currentSearchResult = _updateDataSource(_currentPage);
-                                _updatePagingInfo();
-                            }
-                            catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
+                            id = bookId,
+                            title = json[i]["title"].ToString(),
+                            author = json[i]["author"].ToString(),
+                            publishedYear = int.Parse(json[i]["datePublished"].ToString()),
+                            Amount = int.Parse(json[i]["amount"].ToString()),
+                            price = int.Parse(json[i]["price"].ToString()),
+                            Categories = cats,
+                            ImageBase64 = json[i]["image"].ToString()
+                        };
+                        if (i <= bookItems.Count - 1)
+                        {
+                            bookItems[i] = b;
                         }
+                        else
+                        {
+                            bookItems.Add(b);
+                        }
+
+                        _updateDataSource(_currentPage);
+                        _updatePagingInfo();
+                    }
+                    catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
+
+
+                }
+                currentSearchResult = _updateDataSource(_currentPage);
+                EnableBookView = true;
+                await ReadImage();
+            }
+        }
+
+        public async Task ReadImage()
+        {
+            System.Drawing.Image bm;
+            var client = new HttpClient();
+            foreach (var b in bookItems)
+            {
+                var imgRequest = new HttpRequestMessage(HttpMethod.Get, b.ImageBase64);
+
+                using (var imgResponse = await client.SendAsync(imgRequest))
+                {
+                    imgResponse.EnsureSuccessStatusCode();
+                    var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
+                    using (var stream = new MemoryStream(imgStream))
+                    {
+                        bm = Bitmap.FromStream(stream);
+                        b.coverImage = ConvertToBitmapSource((Bitmap)bm);
                     }
                 }
+                b.ImageBase64 = "";
             }
+
         }
 
         public async Task ReadAllCatAsync()

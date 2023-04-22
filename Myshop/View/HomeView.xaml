@@ -5,13 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Myshop.View"
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-             xmlns:viewmodel="clr-namespace:Myshop.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:DashBoardViewModel}"
+             xmlns:viewmodel="clr-namespace:Myshop.ViewModel" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" d:DataContext="{d:DesignInstance Type=viewmodel:DashBoardViewModel}"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="750">
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="550"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -23,11 +23,25 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Background="AntiqueWhite">
-            <DatePicker Margin="10 10 20 10" d:Name="StartDate"></DatePicker>
-            <DatePicker Margin="10 10 20 10" Name="EndDate"></DatePicker>
-            <Button Content="Today" Margin="10 10 20 10" Name="todayButton"></Button>
-            <Button Content="Last 7 days" Margin="10 10 20 10" Name="last7Button"></Button>
-            <Button Content="Last 30 days" Margin="10 10 20 10" Name="last30Button"></Button>
+            <DatePicker ToolTip="Từ ngày" Margin="10 10 20 10" d:Name="StartDate" DisplayDateEnd="{Binding DateMax}"
+                        SelectedDate="{Binding DateMin}">
+                <Behaviors:Interaction.Triggers>
+                    <Behaviors:EventTrigger EventName="SelectedDateChanged">
+                        <Behaviors:CallMethodAction MethodName="CalendarChanged" TargetObject="{Binding}" />
+                    </Behaviors:EventTrigger>
+                </Behaviors:Interaction.Triggers>
+            </DatePicker>
+            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateMax}" Margin="10 10 20 10" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}">
+                <Behaviors:Interaction.Triggers>
+                    <Behaviors:EventTrigger EventName="SelectedDateChanged">
+                        <Behaviors:CallMethodAction MethodName="CalendarSet" TargetObject="{Binding}" />
+                    </Behaviors:EventTrigger>
+                </Behaviors:Interaction.Triggers>
+            </DatePicker>
+            <Button Content="Today" Margin="10 10 20 10" Name="todayButton" Command="{Binding ChartTodayCommand}"></Button>
+            <Button Content="Last 7 days" Margin="10 10 20 10" Name="last7Button" Command="{Binding ChartWeekCommand}"></Button>
+            <Button Content="Last 30 days" Margin="10 10 20 10" Name="last30Button" Command="{Binding ChartMonthCommand}"></Button>
+            <Button Content="Last 365 days" Margin="10 10 20 10" Name="last365Button" Command="{Binding ChartYearCommand}"></Button>
         </StackPanel>
 
         <Grid Grid.Row="1" Grid.ColumnSpan="2">
@@ -53,38 +67,43 @@
         <lvc:CartesianChart Grid.Row="2" Series="{Binding ProfitCollection}" 
                              Loaded="CartesianChart_Loaded">
             <lvc:CartesianChart.AxisX>
-                
-            
-            <lvc:Axis Title="{Binding XTitle}" Labels="{Binding XLabels}" FontSize="15">
-                <lvc:Axis.Separator>
-                    <lvc:Separator Stroke="Transparent"/>
-                </lvc:Axis.Separator>
-            </lvc:Axis>
+
+
+                <lvc:Axis Title="{Binding XTitle}" Labels="{Binding XLabels}" Foreground="White" FontWeight="SemiBold" FontSize="15">
+                    <lvc:Axis.Separator>
+                        <lvc:Separator Stroke="WhiteSmoke" Step="{Binding ChartStep}"/>
+                    </lvc:Axis.Separator>
+                </lvc:Axis>
             </lvc:CartesianChart.AxisX>
-        
+            <lvc:CartesianChart.AxisY>
+                <lvc:Axis Title="Lợi nhuận" Foreground="White" FontWeight="SemiBold"/>
+            </lvc:CartesianChart.AxisY>
+
         </lvc:CartesianChart>
 
-        <lvc:PieChart Grid.Row="2" Grid.Column="2" Grid.RowSpan="2" Series="{Binding TopSoldCollection}"
-                      LegendLocation="Bottom" />
+        <lvc:PieChart Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" Series="{Binding TopSoldCollection}"
+                      LegendLocation="Bottom"/>
         <StackPanel Grid.Row="3">
             <Label Content="Sản phẩm sắp hết hạn" Style="{StaticResource labelBody}"></Label>
-            <ListView ItemsSource="{Binding RunningOutSource}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
+            <ListView ItemsSource="{Binding RunningOutCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
                       SelectionMode="Single">
                 <ListView.ItemTemplate>
                     <DataTemplate >
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock>
+                        <Grid Width="500">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition Width="50"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0">
                                 <Run Text="{Binding title}" FontWeight="Bold" Foreground="Blue"/>
-                                 <Run Text="{Binding amount}" Foreground="Red"/>
                             </TextBlock>
-                        </StackPanel>
+                            <TextBlock TextAlignment="Right">
+                                <Run Text="{Binding Amount}" Foreground="Red"/>
+                            </TextBlock>
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
+
             </ListView>
         </StackPanel>
     </Grid>
