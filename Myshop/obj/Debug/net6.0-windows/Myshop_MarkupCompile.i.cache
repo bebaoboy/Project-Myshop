@@ -12,9 +12,9 @@ TRACE;DEBUG;NET;NET6_0;NETCOREAPP
 D:\scr\Windows\Project-Myshop\Myshop\App.xaml
 141331012790
 11107443102
-33791131394
+34437455485
 2211382359546
 DataTemplate.xaml;MainWindow.xaml;Styles\Buttons.xaml;Styles\Colors.xaml;Styles\Text.xaml;Styles\Windows.xaml;View\AddBookView.xaml;View\AddOrderView.xaml;View\BookView.xaml;View\EditView.xaml;View\HomeView.xaml;View\LoginWindow.xaml;View\MainView.xaml;View\OrderView.xaml;
 
-True
+False
 
