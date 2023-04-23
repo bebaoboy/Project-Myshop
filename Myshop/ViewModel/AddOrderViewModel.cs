@@ -18,6 +18,8 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using System.Text.Json;
 
 namespace Myshop.ViewModel
 {
@@ -72,6 +74,8 @@ namespace Myshop.ViewModel
 
         public ICommand AddNewBookToOrder { get; }
 
+        public ICommand AddNewOrder { get; }
+
         private ObservableCollection<CustomControl> _customControls = new();
         public ObservableCollection<CustomControl> CustomControls {
             get { return _customControls; }
@@ -80,7 +84,8 @@ namespace Myshop.ViewModel
         public AddOrderViewModel()
         {
             ReadImageAsync();
-            AddNewBookToOrder = new ViewModelCommand(ExecuteAddNewBook);  
+            AddNewBookToOrder = new ViewModelCommand(ExecuteAddNewBook);
+            AddNewOrder = new ViewModelCommand(ExecuteAddOrder);
         }
 
         public async Task ReadImageAsync()
@@ -183,7 +188,70 @@ namespace Myshop.ViewModel
                 ButtonVisibility = Visibility.Visible;
                 OnPropertyChanged(nameof(ButtonVisibility));
             }
-            CustomControls.Add(new CustomControl(getActualData()));
+            CustomControls.Add(new CustomControl(getActualData(), this));
+        }
+
+        private void ExecuteAddOrder(object ob)
+        {
+            SendPostRequest();
+        }
+
+        private async Task SendPostRequest()
+        {
+            var request = "https://hcmusshop.azurewebsites.net/api/Order";
+            DateTime now = DateTime.Now;
+            var jsonArray = new JsonArray();
+
+            decimal total = 0;
+
+            foreach (var custom in CustomControls)
+            {
+                var orderJson = new JsonObject
+                {
+                    {"bookId", custom.Id },
+                    { "amount", custom.Amount},
+                    {"book", new JsonObject{
+                        {"id", custom.Id},
+                        {"title", custom.CurrentBookName },
+                        {"datePublished", custom.currentBook.publishedYear },
+                        {"author", custom.currentBook.author },
+                        {"image", custom.currentBook.ImageBase64 },
+                        {
+                            "price", custom.currentBook.price
+                        },
+                        {"amount", 0 },
+                        {"categoriesOfBooks", new JsonArray() }
+                    } }
+                };
+                total += (decimal)custom.currentBook.price * custom.Amount;
+                jsonArray.Add(orderJson);
+            }
+
+            var json = new JsonObject
+                {
+                    {"customerName", CustomerName },
+                    {"dateCreated", now.ToString() },
+                    {"phoneNumber", Phone},
+                    {"address", Address },
+                    {"total", total },
+                    {"orderDetail", jsonArray}
+                };
+
+
+            var content = new StringContent(JsonSerializer.Serialize(json), Encoding.Default, "application/json");
+
+            using var httpClient = new HttpClient();
+            using (var response = await httpClient.PostAsync(request, content))
+            {
+                try
+                {
+                    response.EnsureSuccessStatusCode();
+                    var r = await response.Content.ReadAsStringAsync();
+                    var json2 = JsonNode.Parse(r);
+
+                }
+                catch (Exception) { }
+            }
         }
 
         private List<Book> getActualData() {
@@ -201,6 +269,11 @@ namespace Myshop.ViewModel
                 }
             }
             return tempData;
+        }
+
+        internal void Remove(CustomControl customControl)
+        {
+            CustomControls.Remove(customControl);
         }
     }
 }

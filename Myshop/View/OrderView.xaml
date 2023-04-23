@@ -27,8 +27,22 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <DatePicker Grid.Column="0" VerticalAlignment="Center" Margin="20 0"/>
-            <DatePicker Grid.Column="1" VerticalAlignment="Center"  Margin="20 0" />  
+            <DatePicker ToolTip="Từ ngày"  d:Name="StartDate" DisplayDateEnd="{Binding DateMax}"
+                        SelectedDate="{Binding DateMin}" Grid.Column="0">
+                <Behaviors:Interaction.Triggers>
+                    <Behaviors:EventTrigger EventName="SelectedDateChanged">
+                        <Behaviors:CallMethodAction MethodName="CalendarChanged" TargetObject="{Binding}" />
+                    </Behaviors:EventTrigger>
+                </Behaviors:Interaction.Triggers>
+            </DatePicker>
+            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateMax}" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}"
+                        Grid.Column="1">
+                <Behaviors:Interaction.Triggers>
+                    <Behaviors:EventTrigger EventName="SelectedDateChanged">
+                        <Behaviors:CallMethodAction MethodName="CalendarSet" TargetObject="{Binding}" />
+                    </Behaviors:EventTrigger>
+                </Behaviors:Interaction.Triggers>
+            </DatePicker>
             <Button Content="Thêm đơn hàng" Command="{Binding OpenAddNewOrder}" Style="{StaticResource loginButton}" Grid.Column="2"/>
 
         </Grid>
@@ -115,12 +129,12 @@
                 <StackPanel Orientation="Horizontal">
                     <StackPanel>
                         <Label Content="Người đặt" Style="{StaticResource labelBody}"/>
-                        <Label Content="{Binding CustomerName}" d:Content="Huynh Minh Bao" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding CustomerName}" d:Content="Huynh Minh Bao" Foreground="Black" FontSize="15"/>
                     </StackPanel>
                     <StackPanel>
-                        <Label Content="Thông tin giao hàng"/>
-                        <Label Content="{Binding Phone}" Style="{StaticResource labelBody}"/>
-                        <Label Content="{Binding Address}" Style="{StaticResource labelBody}"/>
+                        <Label Content="Thông tin giao hàng" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding Phone}" FontSize="15" Foreground="Black"/>
+                        <Label Content="{Binding Address}" FontSize="15" Foreground="Black"/>
                     </StackPanel>
                 </StackPanel>
 

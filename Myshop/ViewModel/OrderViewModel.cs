@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -161,6 +162,30 @@ namespace Myshop.ViewModel
             {
                 address = value;
                 OnPropertyChanged(nameof(address));
+            }
+        }
+
+        private DateTime _dateMax = DateTime.Today;
+        public DateTime DateMax
+        {
+            get { return _dateMax; }
+            set
+            {
+                _dateMax = value;
+                OnPropertyChanged(nameof(DateMax));
+            }
+        }
+        private DateTime DateEnd = DateTime.Today;
+
+        private DateTime _dateMin = DateTime.MinValue;
+
+        public DateTime DateMin
+        {
+            get { return _dateMin; }
+            set
+            {
+                _dateMin = value;
+                OnPropertyChanged(nameof(DateMin));
             }
         }
 
@@ -354,7 +379,19 @@ namespace Myshop.ViewModel
                 int i = _currentIndex;
                 if (i == -1) return;
                 orderItems.RemoveAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
-                // _updateDataSource(_currentPage);
+                _updateDataSource(_currentPage);
+                deleteRequest();
+            }
+        }
+
+        public async Task deleteRequest()
+        {
+            var client = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Delete, "https://hcmusshop.azurewebsites.net/api/Order/" + orderItems[_currentIndex].Id);
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                MessageBox.Show("Xóa đơn hàng", "thành công");
             }
         }
 
@@ -387,6 +424,9 @@ namespace Myshop.ViewModel
 
             BookInOrders = orderItems[_currentIndex].OrderedBook;
             CurrentTotalPrice = orderItems[_currentIndex].Total;
+            CustomerName = orderItems[_currentIndex].CustomerName;
+            Phone = orderItems[_currentIndex].PhoneNumber;
+            Address = orderItems[_currentIndex].Address;
         }
     }
 }

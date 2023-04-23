@@ -408,23 +408,9 @@ namespace Myshop.ViewModel
             DialogResult dialogResult = System.Windows.Forms.MessageBox.Show("Chắc chắn?", "Xóa cuốn sách này chứ?", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
-
-                MenuItem menuItem = (MenuItem)obj;
-
-                int i = _currentIndex;
-                if (i == -1) return;
-                string sql = "delete from book where id = @id";
-                //var command = new SqlCommand(sql, _connection);
-                //command.Parameters.Add("@id", SqlDbType.Int).Value = books[i].id;
-
-                //int rows = command.ExecuteNonQuery();
-
-                //if (rows > 0)
-                //{
-                //    MessageBox.Show($"Book {books[i].title} is deleted");
-                //}
                 bookItems.RemoveAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
                 _updateDataSource(_currentPage);
+                deleteRequest();
             }
         }
 
@@ -592,6 +578,17 @@ namespace Myshop.ViewModel
                 catItems.Add(new Category() { Name = "Chưa phân loại" });
                 CatItemsCollection = new CollectionViewSource { Source = catItems.Select(x => x.Name) };
                 OnPropertyChanged(nameof(CatSourceCollection));
+            }
+        }
+
+        public async Task deleteRequest()
+        {
+            var client = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Delete, "https://hcmusshop.azurewebsites.net/api/Book/" + bookItems[_currentIndex].id);
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                System.Windows.Forms.MessageBox.Show("Xóa sách", "thành công");
             }
         }
 

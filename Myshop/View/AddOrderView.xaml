@@ -7,7 +7,8 @@
         xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:Myshop.View"
         mc:Ignorable="d"
-        Title="Add Order" Height="450" Width="800">
+        Title="Add Order" Height="450" Width="500"
+        ResizeMode="NoResize">
     <Window.DataContext>
         <viewModel:AddOrderViewModel/>
     </Window.DataContext>
@@ -33,9 +34,9 @@
                 <ItemsControl ItemsSource="{Binding CustomControls}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="Green">
+                            <Border Background="FloralWhite">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="{Binding CurrentImage}" Width="100" Height="100"/>
+                                    <Image Source="{Binding CurrentImage}" Width="50" Height="50"/>
                                     <ComboBox ItemsSource="{Binding BookTitles}" SelectedValue="{Binding CurrentBookName}">
                                         <Behaviors:Interaction.Triggers>
                                             <Behaviors:EventTrigger EventName="SelectionChanged">
@@ -43,9 +44,10 @@
                                             </Behaviors:EventTrigger>
                                         </Behaviors:Interaction.Triggers>
                                     </ComboBox>
-                                    <Button Content="+" Command="{Binding IncreaseAmount}"/>
-                                    <TextBlock Text="{Binding Amount}"/>
-                                    <Button Content="-" Command="{Binding DecreaseAmount}"/>
+                                    <Button Content="+" Command="{Binding IncreaseAmount}" Width="20" FontSize="20"/>
+                                    <TextBox Text="{Binding Amount}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10 0"/>
+                                    <Button Content="-" Command="{Binding DecreaseAmount}" Width="20" FontSize="20"/>
+                                    <Button Content="Xóa" Command="{Binding Remove}" Width="30" FontSize="15" />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
