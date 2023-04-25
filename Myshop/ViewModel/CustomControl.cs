@@ -16,8 +16,10 @@ namespace Myshop.ViewModel
 {
     public class CustomControl: ViewModelBase
     {
-        private AddOrderViewModel parent;
-        private List<Book> bookItems;
+        private AddOrderViewModel parentAdd;
+        private EditOrderViewModel parentEdit;
+        private List<Book> bookItems = new();
+        private List<BookInOrder> bookInOrder = new();
         private ImageSource _currentImage;
         public ImageSource CurrentImage
         {
@@ -37,6 +39,8 @@ namespace Myshop.ViewModel
 
         public Book currentBook;
 
+        public BookInOrder currentBookInOrder;
+
         private string _currentBookName;
         public string CurrentBookName
         {
@@ -53,10 +57,22 @@ namespace Myshop.ViewModel
             }
         }
 
+        private double price;
+
         private int id;
         public int Id { get; set; }
 
         private int maxAmount;
+
+        private decimal currentPrice;
+        public decimal CurrentPrice
+        {
+            get { return currentPrice; }
+            set {
+                currentPrice = value;
+                OnPropertyChanged(nameof(CurrentPrice));
+            }
+        }
 
         public ICommand IncreaseAmount { get; }
         public ICommand DecreaseAmount { get; }
@@ -69,9 +85,24 @@ namespace Myshop.ViewModel
             Remove = new ViewModelCommand(ExecuteRemove);
             bookItems = books;
 
-            this.parent = parent;
+            this.parentAdd = parent;
+
 
             GenerateData();
+        }
+
+        public CustomControl(BookInOrder book, EditOrderViewModel parent)
+        {
+            currentBookInOrder = book;
+
+            this.parentEdit = parent;
+
+            CurrentBookName = currentBookInOrder.Title;
+            Amount = currentBookInOrder.Amount;
+            OnPropertyChanged(nameof(Amount));
+            price = currentBookInOrder.Price;
+            CurrentPrice = Amount * (decimal)price;
+            OnPropertyChanged(nameof(CurrentPrice));
         }
 
         private void GenerateData()
@@ -80,7 +111,7 @@ namespace Myshop.ViewModel
             {
                 BookTitles.Add(book.title);
             }
-            OnPropertyChanged(nameof(BookTitles));
+            OnPropertyChanged(nameof(BookTitles));  
         }
 
         public void SelectionChanged(object sender, EventArgs e)
@@ -90,6 +121,10 @@ namespace Myshop.ViewModel
             OnPropertyChanged(nameof(CurrentBookName));
             getImageSource();
             OnPropertyChanged(nameof(CurrentImage));
+
+            parentAdd.IncreaseMoney(price);
+            CurrentPrice = Amount * (decimal)price;
+            OnPropertyChanged(nameof(CurrentPrice));
         }
 
         private void getImageSource()
@@ -102,18 +137,33 @@ namespace Myshop.ViewModel
                     CurrentImage = book.coverImage;
                     maxAmount = book.Amount;
                     Id = book.id;
+                    price = book.price;
+                    return;
+                }
+            }
+
+            foreach (var book in bookInOrder)
+            {
+                if (book.Title.Equals(CurrentBookName))
+                {
+                    maxAmount = book.Amount;
+                    Id = int.Parse(book.Id);
                     return;
                 }
             }
         }
 
-
-
         private void ExecuteIncrease(object ob)
         {
             if (Amount >= maxAmount) Amount = maxAmount;
-            Amount += 1;
-            OnPropertyChanged(nameof(Amount));
+            else
+            {
+                Amount += 1;
+                OnPropertyChanged(nameof(Amount));
+                parentAdd.IncreaseMoney(price);
+                CurrentPrice = Amount * (decimal)price;
+                OnPropertyChanged(nameof(CurrentPrice));
+            }
         }
 
         private void ExecuteDecrease(object ob)
@@ -124,18 +174,23 @@ namespace Myshop.ViewModel
                 if (dialogResult == DialogResult.Yes)
                 {
                     ExecuteRemove(this);
+                    parentAdd.DecreaseMoney(price);
                 }
             }
             else
             {
                 Amount -= 1;
+                parentAdd.DecreaseMoney(price);
+                CurrentPrice = Amount * (decimal)price;
+                OnPropertyChanged(nameof(CurrentPrice));
             }
             OnPropertyChanged(nameof(Amount));
         }
 
         private void ExecuteRemove(object ob)
         {
-            parent.Remove(this);
+            parentAdd.Remove(this, Amount * price);
         }
+
     }
 }

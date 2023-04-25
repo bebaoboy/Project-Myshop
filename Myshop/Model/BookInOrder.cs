@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Imgur.API.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,13 +38,19 @@ namespace Myshop.Model
             set { price = value; }
         }
 
+        public string Image
+        {
+            get;set;
+        }
+
         public BookInOrder(JsonObject ob, int amount)
         {
             try
             {
                 Amount = amount;
                 Title = ob["title"].ToString();
-                Price = double.Parse(ob["price"].ToString()); 
+                Price = double.Parse(ob["price"].ToString());
+                Image = ob["image"].ToString();
             }catch(Exception e)
             {
                 Console.WriteLine(e);

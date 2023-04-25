@@ -398,10 +398,10 @@ namespace Myshop.ViewModel
         public void ExecuteEditCommand(object obj)
         {
             Order b = orderItems.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
-            //EditView editView = new EditView();
-            //var editViewModel = new EditViewModel();
-            //editView.DataContext = editViewModel;
-            //editView.Show();
+            EditOrderView editView = new EditOrderView();
+            var editOrderViewModel = new EditOrderViewModel(orderItems[_currentIndex]);
+            editView.DataContext = editOrderViewModel;
+            editView.Show();
         }
 
         public void ExecuteOpenAddOrderPageCommand(object ob)

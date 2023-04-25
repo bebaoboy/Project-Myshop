@@ -72,6 +72,17 @@ namespace Myshop.ViewModel
             }
         }
 
+        private decimal totalPrice;
+        public decimal TotalPrice
+        {
+            get { return totalPrice; }
+            set
+            {
+                totalPrice = value;
+                OnPropertyChanged(nameof(totalPrice));
+            }
+        }
+
         public ICommand AddNewBookToOrder { get; }
 
         public ICommand AddNewOrder { get; }
@@ -246,8 +257,7 @@ namespace Myshop.ViewModel
                 try
                 {
                     response.EnsureSuccessStatusCode();
-                    var r = await response.Content.ReadAsStringAsync();
-                    var json2 = JsonNode.Parse(r);
+                    MessageBox.Show("Tạo đơn hàng", "thành công");
 
                 }
                 catch (Exception) { }
@@ -271,9 +281,22 @@ namespace Myshop.ViewModel
             return tempData;
         }
 
-        internal void Remove(CustomControl customControl)
+
+        internal void Remove(CustomControl customControl, double v)
         {
             CustomControls.Remove(customControl);
+            TotalPrice -= (decimal)v;
+        }
+
+        internal void DecreaseMoney(double price)
+        {
+            TotalPrice -= (decimal)price;
+            OnPropertyChanged(nameof(TotalPrice));
+        }
+
+        internal void IncreaseMoney(double price)
+        {
+            TotalPrice += (decimal)price;
         }
     }
 }
