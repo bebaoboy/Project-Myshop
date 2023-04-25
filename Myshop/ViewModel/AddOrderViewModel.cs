@@ -230,7 +230,7 @@ namespace Myshop.ViewModel
             var json = new JsonObject
                 {
                     {"customerName", CustomerName },
-                    {"dateCreated", now.ToString() },
+                    {"dateCreated", now.ToString("dd/MM/yyyy") },
                     {"phoneNumber", Phone},
                     {"address", Address },
                     {"total", total },

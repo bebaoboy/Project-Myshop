@@ -22,6 +22,7 @@ namespace Myshop.View
         public LoginWindow()
         {
             InitializeComponent();
+            btnLogin.Focus();
         }
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {

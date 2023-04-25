@@ -42,8 +42,10 @@ namespace Myshop.ViewModel
         public ICommand PrevPageCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand EditCommand { get; }
+        public ICommand EditCategoryCommand { get; }
         public ICommand ViewDetailCommand { get; }
         public ICommand AddBookCommand { get; }
+        public ICommand FindBookCommand { get; }
 
         int _currentPage = 1;
         int _rowsPerPage = 10;
@@ -132,6 +134,37 @@ namespace Myshop.ViewModel
             {
                 _comboBoxRowPerPage = value;
                 OnPropertyChanged(nameof(ComboBoxRowPerPage));
+            }
+        }
+        private int _lowerValue = 0;
+
+        public int LowerValue
+        {
+            get
+            {
+                return _lowerValue;
+            }
+
+            set
+            {
+                _lowerValue = value;
+                OnPropertyChanged(nameof(LowerValue));
+            }
+        }
+
+        private int _higherValue = 200000;
+
+        public int HigherValue
+        {
+            get
+            {
+                return _higherValue;
+            }
+
+            set
+            {
+                _higherValue = value;
+                OnPropertyChanged(nameof(HigherValue));
             }
         }
 
@@ -252,9 +285,11 @@ namespace Myshop.ViewModel
             NextPageCommand = new ViewModelCommand(ExecuteNextPageCommand);
             PrevPageCommand = new ViewModelCommand(ExecutePrevPageCommand);
             EditCommand = new ViewModelCommand(ExecuteEditCommand);
+            EditCategoryCommand = new ViewModelCommand(ExecuteEditCategoryCommand);
             DeleteCommand = new ViewModelCommand(ExecuteDeleteCommand);
             ViewDetailCommand = new ViewModelCommand(ExcecuteViewDetailCommand);
             AddBookCommand = new ViewModelCommand(ExecuteAddBookCommand);
+            FindBookCommand = new ViewModelCommand(ExecuteFindBookCommand);
             ReadImageAsync();
             ReadAllCatAsync();
 
@@ -269,6 +304,7 @@ namespace Myshop.ViewModel
                 _currentPage, _rowsPerPage, _keyword);
             _totalPages = _totalItems / _rowsPerPage +
        (_totalItems % _rowsPerPage == 0 ? 0 : 1);
+            currentSearchResult = books;
             BookItemsCollection = new CollectionViewSource { Source = books };
             OnPropertyChanged(nameof(BookSourceCollection));
             if (ComboBoxItemsSource != null && _totalPages != ComboBoxItemsSource.Count)
@@ -337,7 +373,7 @@ namespace Myshop.ViewModel
             }
 
             list = list.Where(
-                item => item.title.ToLower().Contains(keyword.ToLower())
+                item => item.title.ToLower().Contains(keyword.ToLower()) && item.price >= LowerValue && item.price <= HigherValue
             );
 
             if (sortAsc != null)
@@ -386,7 +422,7 @@ namespace Myshop.ViewModel
         public void SelectionChanged(object sender, EventArgs e)
         {
             System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
-            currentSearchResult = _updateDataSource(SelectBox.SelectedIndex + 1);
+            _updateDataSource(SelectBox.SelectedIndex + 1);
         }
 
         public void RowPerPageSelectionChanged(object sender, EventArgs e)
@@ -394,7 +430,7 @@ namespace Myshop.ViewModel
             System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
             ComboBoxRowPerPage = SelectBox.SelectedIndex;
             _rowsPerPage = int.Parse((string)((ComboBoxItem)SelectBox.SelectedItem).Content);
-            currentSearchResult = _updateDataSource(1);
+            _updateDataSource(1);
         }
 
         public void ExcecuteViewDetailCommand(object obj)
@@ -423,12 +459,34 @@ namespace Myshop.ViewModel
             editView.Show();
         }
 
+        public void ExecuteEditCategoryCommand(object obj)
+        {
+            var editView = new EditCategoryView();
+            var editViewModel = new EditCategoryViewModel(this, catItems);
+            editView.DataContext = editViewModel;
+            editView.Show();
+        }
+
+        public void UpdateCategoryList(ObservableCollection<Category> category)
+        {
+            catItems = category;
+            catItems.Insert(0, new Category() { Name = "Tất cả sách" });
+            catItems.Add(new Category() { Name = "Chưa phân loại" });
+            CatItemsCollection = new CollectionViewSource { Source = catItems.Select(x => x.Name) };
+            OnPropertyChanged(nameof(CatSourceCollection));
+        }
+
         public void ExecuteAddBookCommand(object obj)
         {
             var addView = new AddBookView();
             var addViewModel = new AddBookViewModel();
             addView.DataContext = addViewModel;
             addView.Show();
+        }
+
+        public void ExecuteFindBookCommand(object obj)
+        {
+            _updateDataSource(1);
         }
 
         public void setUpdateBookData()
@@ -471,7 +529,7 @@ namespace Myshop.ViewModel
                 }
                 else
                 {
-                    currentSearchResult = _updateDataSource(_currentPage);
+                    _updateDataSource(_currentPage);
                     _updatePagingInfo();
                     EnableBookView = true;
                     await ReadImage();
@@ -517,7 +575,7 @@ namespace Myshop.ViewModel
 
 
                 }
-                currentSearchResult = _updateDataSource(_currentPage);
+                _updateDataSource(1);
                 EnableBookView = true;
                 await ReadImage();
             }
@@ -596,14 +654,14 @@ namespace Myshop.ViewModel
         {
             System.Windows.Controls.ComboBox SelectBox = (System.Windows.Controls.ComboBox)sender;
             CatIndex = SelectBox.SelectedIndex;
-            currentSearchResult = _updateDataSource(_currentPage);
+            _updateDataSource(1);
         }
 
         public void SearchTextChanged(object sender, EventArgs e)
         {
             var seachBar = (System.Windows.Controls.TextBox)sender;
             _keyword = seachBar.Text;
-            currentSearchResult = _updateDataSource(_currentPage);
+            _updateDataSource(1);
         }
 
         public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
@@ -647,6 +705,23 @@ namespace Myshop.ViewModel
                 }
             }));
            
+        }
+
+        public void LowerPriceChanged(object sender, EventArgs e)
+        {
+            var slider = (RangeSlider) sender;
+            LowerValue = Round(slider.LowerValue);
+        }
+
+        public void HigherPriceChanged(object sender, EventArgs e)
+        {
+            var slider = (RangeSlider)sender;
+            HigherValue = Round(slider.HigherValue);
+        }
+
+        public int Round(double source, double modulus=5000)
+        {
+            return (int)(Math.Round(source / modulus) * modulus);
         }
     }
 }

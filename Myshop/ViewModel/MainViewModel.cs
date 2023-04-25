@@ -21,6 +21,8 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Windows.Resources;
 using System.Windows;
+using System.Configuration;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace Myshop.ViewModel
 {
@@ -36,7 +38,48 @@ namespace Myshop.ViewModel
         private string _caption;
         private IconChar _icon;
         private string fileName = Directory.GetCurrentDirectory() + "/" + "data\\BookStoreData.xlsx";
+        private bool _homeTab = true;
+        public bool HomeTab
+        {
+            get
+            {
+                return _homeTab;
+            }
 
+            set
+            {
+                _homeTab = value;
+                OnPropertyChanged(nameof(HomeTab));
+            }
+        }
+        private bool _orderTab = false;
+        public bool OrderTab
+        {
+            get
+            {
+                return _orderTab;
+            }
+
+            set
+            {
+                _orderTab = value;
+                OnPropertyChanged(nameof(OrderTab));
+            }
+        }
+        private bool _bookTab = false;
+        public bool BookTab
+        {
+            get
+            {
+                return _bookTab;
+            }
+
+            set
+            {
+                _bookTab = value;
+                OnPropertyChanged(nameof(BookTab));
+            }
+        }
         public ViewModelBase CurrentChildView
         {
             get
@@ -108,8 +151,36 @@ namespace Myshop.ViewModel
 
             ImportData = new ViewModelCommand(ExecuteImportCommand);
 
-            CurrentChildView = new DashBoardViewModel();
-            ExecuteShowHomeViewCommand(null);
+            try
+            {
+                int lastScreen = int.Parse(ConfigurationManager.AppSettings["LastScreen"] ?? "1");
+                if (lastScreen == 3)
+                {
+                    ExecuteShowBooksViewCommand(null);
+                }
+                else if (lastScreen == 2)
+                {
+                    ExecuteShowOrdersViewCommand(null);
+                }
+                else
+                {
+                    ExecuteShowHomeViewCommand(null);
+                }
+            } catch (Exception)
+            {
+                ExecuteShowHomeViewCommand(null);
+            }
+            
+        }
+
+        private void saveLastScreen(int i)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(
+                    ConfigurationUserLevel.None);
+            config.AppSettings.Settings["LastScreen"].Value = i.ToString();
+
+            config.Save(ConfigurationSaveMode.Full);
+            ConfigurationManager.RefreshSection("appSettings");
         }
 
         private async void ExecuteImportCommand(object obj)
@@ -330,6 +401,10 @@ namespace Myshop.ViewModel
             CurrentChildView = new BookViewModel();
             Caption = "Sách";
             Icon = IconChar.Book;
+            saveLastScreen(3);
+            HomeTab = false;
+            OrderTab = false;
+            BookTab = true;
         }
 
         private void ExecuteShowHomeViewCommand(object obj)
@@ -337,6 +412,10 @@ namespace Myshop.ViewModel
             CurrentChildView = new DashBoardViewModel();
             Caption = "Dashboard";
             Icon = IconChar.Dashboard;
+            saveLastScreen(1);
+            HomeTab = true;
+            OrderTab = false;
+            BookTab = false;
         }
 
         private void ExecuteShowOrdersViewCommand(object obj)
@@ -344,6 +423,10 @@ namespace Myshop.ViewModel
             CurrentChildView = new OrderViewModel();
             Caption = "Đơn hàng";
             Icon = IconChar.FirstOrder;
+            saveLastScreen(2);
+            HomeTab = false;
+            OrderTab = true;
+            BookTab = false;
         }
     }
 }

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -17,7 +19,66 @@ using System.Windows.Media;
 
 namespace Myshop.ViewModel
 {
-    
+    public class WeekOfYear
+    {
+        public int WeekNumber { get; set; }
+        public DateTime FirstDayOfWeek { get; set; }
+        public DateTime LastDayOfWeek { get; set; }
+        public static List<WeekOfYear> GetWeeksOfYear(int year)
+        {
+            var weeksQuantity = GetNumberOfWeeksInYear(year);
+            var weeksList = new List<WeekOfYear>();
+
+            for (int i = 1; i <= weeksQuantity; i++)
+            {
+                var weekNumber = i;
+
+                DateTime firstDay;
+                DateTime lastDay;
+                GetFirstAndLastDateOfWeek(year, weekNumber, out firstDay, out lastDay);
+
+                weeksList.Add(new WeekOfYear
+                {
+                    FirstDayOfWeek = firstDay,
+                    LastDayOfWeek = lastDay,
+                    WeekNumber = weekNumber
+                });
+            }
+
+            return weeksList;
+        }
+
+        private static int GetNumberOfWeeksInYear(int year)
+        {
+            var dfi = DateTimeFormatInfo.CurrentInfo;
+            var date1 = new DateTime(year, 12, 31);
+            if (dfi != null)
+            {
+                System.Globalization.Calendar cal = dfi.Calendar;
+                return cal.GetWeekOfYear(date1, dfi.CalendarWeekRule,
+                    dfi.FirstDayOfWeek);
+            }
+
+            return 0;
+        }
+
+        private static void GetFirstAndLastDateOfWeek(int year, int weekOfYear, out DateTime firstDay, out DateTime lastDay)
+        {
+            var ci = CultureInfo.CurrentCulture;
+
+            DateTime jan1 = new DateTime(year, 1, 1);
+            int daysOffset = (int)ci.DateTimeFormat.FirstDayOfWeek - (int)jan1.DayOfWeek;
+            DateTime firstWeekDay = jan1.AddDays(daysOffset);
+            int firstWeek = ci.Calendar.GetWeekOfYear(jan1, ci.DateTimeFormat.CalendarWeekRule, ci.DateTimeFormat.FirstDayOfWeek);
+            if ((firstWeek <= 1 || firstWeek >= 52) && daysOffset >= -3)
+            {
+                weekOfYear -= 1;
+            }
+
+            firstDay = firstWeekDay.AddDays(weekOfYear * 7);
+            lastDay = firstDay.AddDays(6);
+        }
+    }
     public class DashBoardViewModel: ViewModelBase
     {
         public enum ProfitType
@@ -25,8 +86,10 @@ namespace Myshop.ViewModel
             date = 1,
             month = 2,
             year = 3,
-            week = 4
+            week = 4,
+            monthly = 5
         }
+
         private SeriesCollection profitCollection = new();
         public SeriesCollection ProfitCollection { get { return profitCollection; } set {
                 profitCollection = value;
@@ -84,10 +147,24 @@ namespace Myshop.ViewModel
         private ProfitType _profitType = ProfitType.date;
 
         private int totalBooks;
-        public int TotalBooks { get; set; }
+        public int TotalBooks {
+            get { return totalBooks; }
+            set
+            {
+                totalBooks = value;
+                OnPropertyChanged(nameof(TotalBooks));
+            }
+        }
 
         private int totalOrders;
-        public int TotalOrders { get; set; }
+        public int TotalOrders {
+            get { return totalOrders; }
+            set
+            {
+                totalOrders = value;
+                OnPropertyChanged(nameof(TotalOrders));
+            }
+        }
 
         private decimal totalProfit;
         public decimal TotalProfit { get; set; }
@@ -103,6 +180,7 @@ namespace Myshop.ViewModel
         public ICommand ChartTodayCommand { get; }
         public ICommand ChartWeekCommand { get; }
         public ICommand ChartMonthCommand { get; }
+        public ICommand ChartMonthlyCommand { get; }
         public ICommand ChartYearCommand { get; }
         public DashBoardViewModel()
         {
@@ -112,6 +190,7 @@ namespace Myshop.ViewModel
             getOutOfStock();
             ChartTodayCommand = new ViewModelCommand(ExecuteChartDate);
             ChartMonthCommand = new ViewModelCommand(ExecuteChartMonth);
+            ChartMonthlyCommand = new ViewModelCommand(ExecuteChartMonthly);
             ChartYearCommand = new ViewModelCommand(ExecuteChartYear);
             ChartWeekCommand = new ViewModelCommand(ExecuteChartWeek);
         }
@@ -128,6 +207,13 @@ namespace Myshop.ViewModel
         {
             _profitType = ProfitType.month;
             ChartStep = 2;
+            getProfit("", _profitType);
+        }
+
+        public void ExecuteChartMonthly(object obj)
+        {
+            _profitType = ProfitType.monthly;
+            ChartStep = 1;
             getProfit("", _profitType);
         }
 
@@ -168,6 +254,8 @@ namespace Myshop.ViewModel
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/Order");
+            TotalOrders = 0;
+            TotalBooks = 0;
             using (var response = await client.SendAsync(request))
             {
                 response.EnsureSuccessStatusCode();
@@ -177,25 +265,239 @@ namespace Myshop.ViewModel
                 DateTime currentDate = DateTime.Today;
                 ChartValues<Decimal> decimals = new();
                 Dictionary<string, int> soldItems = new();
-                if (typeProfit == ProfitType.date)
+                try
                 {
-                    Dictionary<string, decimal> orderTotal = new();
-
-                    for (int i = 0; i < json.Count; i++)
+                    if (typeProfit == ProfitType.date)
                     {
-                        string dateString = json[i]["dateCreated"].ToString();
-                        DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
-                        if(DateTime.Compare(DateMin, orderCreatedDate) <= 0 && DateTime.Compare(orderCreatedDate, DateEnd) <= 0)
-                        {
-                            if (orderTotal.ContainsKey(dateString))
+                        SortedDictionary<string, decimal> orderTotal = new(Comparer<string>.Create(
+                            (x, y) =>
                             {
-                                orderTotal[dateString] += decimal.Parse(json[i]["total"].ToString());
+                                return DateTime.Compare(DateTime.ParseExact(x, "dd/MM/yyyy", null), DateTime.ParseExact(y, "dd/MM/yyyy", null));
+                            }));
+
+                        for (int i = 0; i < json.Count; i++)
+                        {
+                            string dateString = json[i]["dateCreated"].ToString();
+                            DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
+                            if (DateTime.Compare(DateMin, orderCreatedDate) <= 0 && DateTime.Compare(orderCreatedDate, DateEnd) <= 0)
+                            {
+                                TotalOrders++;
+                                if (orderTotal.ContainsKey(dateString))
+                                {
+                                    orderTotal[dateString] += decimal.Parse(json[i]["total"].ToString());
+                                }
+                                else orderTotal[dateString] = decimal.Parse(json[i]["total"].ToString());
+                                var jsonArray = json[i]["orderDetail"].AsArray();
+                                foreach (var item in jsonArray)
+                                {
+                                    var amount = int.Parse(item["amount"].ToString());
+                                    TotalBooks += amount;
+                                    var bookString = item["book"].AsObject();
+                                    BookInOrder temp = new BookInOrder(bookString, amount);
+                                    if (soldItems.ContainsKey(temp.Title))
+                                    {
+                                        soldItems[temp.Title] += amount;
+                                    }
+                                    else
+                                    {
+                                        soldItems[temp.Title] = amount;
+                                    }
+                                }
                             }
-                            else orderTotal.Add(dateString, decimal.Parse(json[i]["total"].ToString()));
+                        }
+
+                        foreach (var item in orderTotal.Values)
+                        {
+                            decimals.Add(item);
+                        }
+
+                        ProfitCollection = new SeriesCollection {
+                                new ColumnSeries{
+                                    DataLabels = true,
+                                    Values = decimals,
+                                    Title = "Doanh thu theo ngày"
+                                }
+                            };
+
+                        OnPropertyChanged(nameof(ProfitCollection));
+
+
+                        XTitle = DateMin != DateEnd ? "Ngày (" + (DateMin == DateTime.MinValue ? "0" : DateMin.ToString("dd/MM/yyyy")) + " - " + DateEnd.ToString("dd/MM/yyyy") + ")" : ("Ngày " + DateEnd.ToString("dd/MM/yyyy"));
+                        XLabels = new List<string>(orderTotal.Keys);
+
+                        OnPropertyChanged(nameof(XTitle));
+                        OnPropertyChanged(nameof(XLabels));
+                    }
+                    else if (typeProfit == ProfitType.month)
+                    {
+                        int currentMonth = currentDate.Month;
+                        Dictionary<int, decimal> dailyProfit = new();
+                        for (int i = 1; i <= DateTime.DaysInMonth(currentDate.Year, currentMonth); i++)
+                        {
+                            dailyProfit[i] = 0;
+                        }
+                        for (int i = 0; i < json.Count; i++)
+                        {
+                            string dateString = json[i]["dateCreated"].ToString();
+                            DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
+                            int month = orderCreatedDate.Month;
+                            if (month == currentMonth)
+                            {
+                                TotalOrders++;
+
+                                if (dailyProfit.ContainsKey(orderCreatedDate.Day))
+                                {
+                                    dailyProfit[orderCreatedDate.Day] += decimal.Parse(json[i]["total"].ToString());
+                                }
+                                else
+                                {
+                                    dailyProfit[orderCreatedDate.Day] = decimal.Parse(json[i]["total"].ToString());
+                                }
+                                var jsonArray = json[i]["orderDetail"].AsArray();
+                                foreach (var item in jsonArray)
+                                {
+                                    var amount = int.Parse(item["amount"].ToString());
+                                    TotalBooks += amount;
+
+                                    var bookString = item["book"].AsObject();
+                                    BookInOrder temp = new BookInOrder(bookString, amount);
+                                    if (soldItems.ContainsKey(temp.Title))
+                                    {
+                                        soldItems[temp.Title] += amount;
+                                    }
+                                    else
+                                    {
+                                        soldItems[temp.Title] = amount;
+                                    }
+                                }
+                            }
+
+                        }
+
+                        foreach (var item in dailyProfit.Values)
+                        {
+                            decimals.Add((int)item);
+                        }
+
+
+                        ProfitCollection = new SeriesCollection {
+                                new ColumnSeries{
+                                    DataLabels = true,
+                                    Values = decimals,
+                                    Title = "Doanh thu mỗi ngày"
+                                }
+                            };
+
+                        OnPropertyChanged(nameof(ProfitCollection));
+
+                        List<string> labels = new();
+                        foreach (var day in dailyProfit.Keys)
+                        {
+                            labels.Add(day.ToString());
+                        }
+
+                        XTitle = "Ngày (Tháng " + currentMonth + "/" + currentDate.Year + ")";
+                        XLabels = labels;
+
+                        OnPropertyChanged(nameof(XTitle));
+                        OnPropertyChanged(nameof(XLabels));
+                    }
+                    else if (typeProfit == ProfitType.monthly)
+                    {
+                        int currentYear = currentDate.Year;
+                        Dictionary<int, decimal> monthlyProfit = new();
+                        for (int i = 1; i <= 12; i++)
+                        {
+                            monthlyProfit[i] = 0;
+                        }
+                        for (int i = 0; i < json.Count; i++)
+                        {
+                            string dateString = json[i]["dateCreated"].ToString();
+                            DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
+                            int year = orderCreatedDate.Year;
+                            if (year == currentYear)
+                            {
+                                TotalOrders++;
+
+                                if (monthlyProfit.ContainsKey(orderCreatedDate.Month))
+                                {
+                                    monthlyProfit[orderCreatedDate.Month] += decimal.Parse(json[i]["total"].ToString());
+                                }
+                                else
+                                {
+                                    monthlyProfit[orderCreatedDate.Month] = decimal.Parse(json[i]["total"].ToString());
+                                }
+                                var jsonArray = json[i]["orderDetail"].AsArray();
+                                foreach (var item in jsonArray)
+                                {
+                                    var amount = int.Parse(item["amount"].ToString());
+                                    TotalBooks += amount;
+
+                                    var bookString = item["book"].AsObject();
+                                    BookInOrder temp = new BookInOrder(bookString, amount);
+                                    if (soldItems.ContainsKey(temp.Title))
+                                    {
+                                        soldItems[temp.Title] += amount;
+                                    }
+                                    else
+                                    {
+                                        soldItems[temp.Title] = amount;
+                                    }
+                                }
+                            }
+
+                        }
+
+                        foreach (var item in monthlyProfit.Values)
+                        {
+                            decimals.Add((int)item);
+                        }
+
+
+                        ProfitCollection = new SeriesCollection {
+                                new ColumnSeries{
+                                    DataLabels = true,
+                                    Values = decimals,
+                                    Title = "Doanh thu theo năm nay"
+                                }
+                            };
+
+                        OnPropertyChanged(nameof(ProfitCollection));
+
+                        List<string> labels = new();
+                        foreach (var day in monthlyProfit.Keys)
+                        {
+                            labels.Add(day.ToString());
+                        }
+
+                        XTitle = "Tháng/" + currentYear;
+                        XLabels = labels;
+
+                        OnPropertyChanged(nameof(XTitle));
+                        OnPropertyChanged(nameof(XLabels));
+                    }
+                    else if (typeProfit == ProfitType.year)
+                    {
+                        SortedDictionary<string, decimal> orderTotal = new();
+
+                        for (int i = 0; i < json.Count; i++)
+                        {
+                            TotalOrders++;
+
+                            string dateString = json[i]["dateCreated"].ToString();
+                            DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
+                            var yearCreated = orderCreatedDate.Year.ToString();
+                            if (orderTotal.ContainsKey(yearCreated))
+                            {
+                                orderTotal[yearCreated] += decimal.Parse(json[i]["total"].ToString());
+                            }
+                            else orderTotal[yearCreated] = decimal.Parse(json[i]["total"].ToString());
                             var jsonArray = json[i]["orderDetail"].AsArray();
                             foreach (var item in jsonArray)
                             {
                                 var amount = int.Parse(item["amount"].ToString());
+                                TotalBooks += amount;
+
                                 var bookString = item["book"].AsObject();
                                 BookInOrder temp = new BookInOrder(bookString, amount);
                                 if (soldItems.ContainsKey(temp.Title))
@@ -207,18 +509,112 @@ namespace Myshop.ViewModel
                                     soldItems[temp.Title] = amount;
                                 }
                             }
-                        }
-                    }
 
-                    foreach(var item in orderTotal.Values)
-                    {
-                        decimals.Add(item);
+                        }
+
+                        foreach (var item in orderTotal.Values)
+                        {
+                            decimals.Add(item);
+                        }
+
+
+                        ProfitCollection = new SeriesCollection {
+                                new ColumnSeries{
+                                    DataLabels = true,
+                                    Values = decimals,
+                                    Title = "Doanh thu theo năm"
+                                }
+                            };
+
+                        OnPropertyChanged(nameof(ProfitCollection));
+
+
+                        XTitle = "Năm";
+                        XLabels = new List<string>(orderTotal.Keys);
+
+                        OnPropertyChanged(nameof(XTitle));
+                        OnPropertyChanged(nameof(XLabels));
                     }
-                    if (decimals.Count == 0)
+                    else // weekly
                     {
-                        var amount = 0;
-                        soldItems["None"] = 10;
-                        decimals.Add((int)100000);
+                        Dictionary<string, decimal> weeklyProfit = new();
+                        var firstDate = currentDate.AddDays(-14);
+                        for (var i = firstDate; i <= currentDate; i = i.AddDays(1))
+                        {
+                            weeklyProfit[i.ToString("dd/MM")] = 0;
+                        }
+                        for (int i = 0; i < json.Count; i++)
+                        {
+                            string dateString = json[i]["dateCreated"].ToString();
+                            DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
+                            if (DateTime.Compare(firstDate, orderCreatedDate) <= 0 && DateTime.Compare(orderCreatedDate, currentDate) <= 0)
+                            {
+                                TotalOrders++;
+
+                                if (weeklyProfit.ContainsKey(orderCreatedDate.ToString("dd/MM")))
+                                {
+                                    weeklyProfit[orderCreatedDate.ToString("dd/MM")] += decimal.Parse(json[i]["total"].ToString());
+                                }
+                                else
+                                {
+                                    weeklyProfit[orderCreatedDate.ToString("dd/MM")] = decimal.Parse(json[i]["total"].ToString());
+                                }
+                                var jsonArray = json[i]["orderDetail"].AsArray();
+                                foreach (var item in jsonArray)
+                                {
+                                    var amount = int.Parse(item["amount"].ToString());
+                                    TotalBooks += amount;
+
+                                    var bookString = item["book"].AsObject();
+                                    BookInOrder temp = new BookInOrder(bookString, amount);
+                                    if (soldItems.ContainsKey(temp.Title))
+                                    {
+                                        soldItems[temp.Title] += amount;
+                                    }
+                                    else
+                                    {
+                                        soldItems[temp.Title] = amount;
+                                    }
+                                }
+                            }
+
+
+                        }
+
+                        foreach (var item in weeklyProfit.Values)
+                        {
+                            decimals.Add((int)item);
+                        }
+
+
+                        ProfitCollection = new SeriesCollection {
+                                new ColumnSeries{
+                                    DataLabels = true,
+                                    Values = decimals,
+                                    Title = "Doanh thu tuần này"
+                                }
+                            };
+
+                        OnPropertyChanged(nameof(ProfitCollection));
+
+                        List<string> labels = new();
+                        foreach (var day in weeklyProfit.Keys)
+                        {
+                            if (weeklyProfit[day] != 0)
+                            {
+                                labels.Add(day.ToString());
+                            }
+                            else
+                            {
+                                labels.Add("");
+                            }
+                        }
+
+                        XTitle = "Ngày (" + firstDate.ToString("dd/MM") + " - " + currentDate.ToString("dd/MM") + ")";
+                        XLabels = labels;
+
+                        OnPropertyChanged(nameof(XTitle));
+                        OnPropertyChanged(nameof(XLabels));
                     }
                     TopSoldCollection.Clear();
                     foreach (var solditem in soldItems)
@@ -230,137 +626,15 @@ namespace Myshop.ViewModel
                             new PieSeries
                             {
                                 Title = key,
-                                Values = new ChartValues<int>() { value}
+                                Values = new ChartValues<int>() { value }
                             }
                          );
                     }
-
-
-                    ProfitCollection = new SeriesCollection {
-                                new ColumnSeries{
-                                    DataLabels = true,
-                                    Values = decimals,
-                                    Title = "Doanh thu theo ngày"
-                                }
-                            };
-
-                    OnPropertyChanged(nameof(ProfitCollection));
-
-
-                    XTitle = "Giờ";
-                    XLabels = new List<string>(orderTotal.Keys);
-                    
-                    OnPropertyChanged(nameof(XTitle));
-                    OnPropertyChanged(nameof(XLabels));
                 }
-                else if(typeProfit == ProfitType.month)
+                catch (Exception ex)
                 {
-                    int currentMonth = currentDate.Month;
-                    Dictionary<int, decimal> dailyProfit = new();
-                    for (int i = 1; i <= DateTime.DaysInMonth(currentDate.Year, currentMonth); i++)
-                    {
-                        dailyProfit[i] = 0;
-                    }
-                    for (int i = 0; i < json.Count; i++)
-                    {
-                        string dateString = json[i]["dateCreated"].ToString();
-                        DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
-                        int month = orderCreatedDate.Month;
-                        if (month == currentMonth)
-                        {
-                            if (dailyProfit.ContainsKey(orderCreatedDate.Day))
-                            {
-                                dailyProfit[orderCreatedDate.Day] += decimal.Parse(json[i]["total"].ToString());
-                            }
-                            else
-                            {
-                                dailyProfit[orderCreatedDate.Day] = decimal.Parse(json[i]["total"].ToString());
-                            }  
-                        }
-                    }
-
-                    foreach (var item in dailyProfit.Values)
-                    {
-                        decimals.Add((int)item);
-                    }
-
-
-                    ProfitCollection = new SeriesCollection {
-                                new ColumnSeries{
-                                    DataLabels = true,
-                                    Values = decimals,
-                                    Title = "Doanh thu theo tháng"
-                                }
-                            };
-
-                    OnPropertyChanged(nameof(ProfitCollection));
-
-                    List<string> labels = new();
-                    foreach(var day in dailyProfit.Keys)
-                    {
-                        labels.Add(day.ToString());
-                    }
-
-                    XTitle = "Ngày";
-                    XLabels = labels;
-
-                    OnPropertyChanged(nameof(XTitle));
-                    OnPropertyChanged(nameof(XLabels));
+                    var b = 50;
                 }
-                else if(typeProfit == ProfitType.year)
-                {
-                    int currentYear = currentDate.Year;
-                    Dictionary<int, decimal> monthlyProfit = new();
-                    for(int i = 1; i <= 12; i++)
-                    {
-                        monthlyProfit[i] = 0;
-                    }
-                    for (int i = 0; i < json.Count; i++)
-                    {
-                        string dateString = json[i]["dateCreated"].ToString();
-                        DateTime orderCreatedDate = DateTime.ParseExact(dateString, "dd/MM/yyyy", null);
-                        int year = orderCreatedDate.Year;
-                        if (year == currentYear)
-                        {
-                            if (monthlyProfit.ContainsKey(orderCreatedDate.Month))
-                            {
-                                monthlyProfit[orderCreatedDate.Month] += decimal.Parse(json[i]["total"].ToString());
-                            }
-                            else
-                            {
-                                monthlyProfit[orderCreatedDate.Month] = decimal.Parse(json[i]["total"].ToString());
-                            }
-                        }
-                    }
-
-                    foreach (var item in monthlyProfit.Values)
-                    {
-                        decimals.Add((int)item);
-                    }
-
-
-                    ProfitCollection = new SeriesCollection {
-                                new ColumnSeries{
-                                    DataLabels = true,
-                                    Values = decimals,
-                                    Title = "Doanh thu theo năm"
-                                }
-                            };
-
-                    OnPropertyChanged(nameof(ProfitCollection));
-
-                    List<string> labels = new();
-                    foreach (var day in monthlyProfit.Keys)
-                    {
-                        labels.Add(day.ToString());
-                    }
-
-                    XTitle = "Tháng";
-                    XLabels = labels;
-
-                    OnPropertyChanged(nameof(XTitle));
-                    OnPropertyChanged(nameof(XLabels));
-                }       
             }
         }
 

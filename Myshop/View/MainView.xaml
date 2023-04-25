@@ -61,7 +61,7 @@
                         <!--Menu Buttons-->
                         <RadioButton Style="{StaticResource menuButton}"
                                  Tag="{StaticResource color1}"
-                                 IsChecked="True"
+                                 IsChecked="{Binding HomeTab}"
                                  Command="{Binding ShowHomeViewCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <fa:IconImage Icon="Home" Style="{StaticResource menuButtonIcon}"/>
@@ -71,6 +71,8 @@
 
                         <RadioButton Style="{StaticResource menuButton}"
                                  Tag="{StaticResource color1}"
+                                 IsChecked="{Binding OrderTab}"
+                                   
                                  Command="{Binding ShowOrderViewCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <fa:IconImage Icon="FirstOrder" Style="{StaticResource menuButtonIcon}"/>
@@ -80,6 +82,8 @@
 
                         <RadioButton Style="{StaticResource menuButton}"
                                  Tag="{StaticResource color1}"
+                                 IsChecked="{Binding BookTab}"
+                                     
                                  Command="{Binding ShowBookViewCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <fa:IconImage Icon="UserGroup" Style="{StaticResource menuButtonIcon}"/>

@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
-             xmlns:local="clr-namespace:Myshop.View" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewModel="clr-namespace:Myshop.ViewModel"
+             xmlns:local="clr-namespace:Myshop.View" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:viewModel="clr-namespace:Myshop.ViewModel" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              >
@@ -27,7 +27,7 @@
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <StackPanel Width="300"  Orientation="Horizontal"
+            <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
                         Grid.Column="0">
@@ -35,7 +35,7 @@
                 <TextBox IsEnabled="{Binding EnableBookView}" Text=""   
                     FontSize="13"
                          Height="24"
-                           Width="300"
+                           Width="100"
                            Background="Transparent"
                              FontWeight="Medium"
                              FontFamily="Montserrat"                            
@@ -51,6 +51,35 @@
                         </Behaviors:EventTrigger>
                     </Behaviors:Interaction.Triggers>
                 </TextBox>
+                <TextBox IsReadOnly="True" Text="{Binding LowerValue}" FontSize="15" VerticalAlignment="Center" Width="50" TextAlignment="Center"/>
+                <xctk:RangeSlider x:Name="_rangeSlider"
+                                            IsEnabled="{Binding EnableBookView}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Minimum="0"
+                                          Maximum="200000"
+                                          LowerValue="{Binding LowerValue}"
+                                          HigherValue="{Binding HigherValue}"
+                                          Step="5000"
+                                          Width="200"
+                                          Orientation="Horizontal"
+                                          LowerThumbBackground="#FFF0F0F0"
+                                          HigherThumbBackground="#FFF0F0F0"
+                                          RangeBackground="{StaticResource color2}"
+                                          HigherRangeBackground="Transparent"
+                                          LowerRangeBackground="Transparent"
+                                  >
+                    <Behaviors:Interaction.Triggers>
+                        <Behaviors:EventTrigger EventName="LowerValueChanged">
+                            <Behaviors:CallMethodAction MethodName="LowerPriceChanged" TargetObject="{Binding}" />
+                        </Behaviors:EventTrigger>
+                        <Behaviors:EventTrigger EventName="HigherValueChanged">
+                            <Behaviors:CallMethodAction MethodName="HigherPriceChanged" TargetObject="{Binding}" />
+                        </Behaviors:EventTrigger>
+                    </Behaviors:Interaction.Triggers>
+                </xctk:RangeSlider>
+                <TextBox IsReadOnly="True" Text="{Binding HigherValue}" FontSize="15" VerticalAlignment="Center" Width="60" TextAlignment="Center"/>
+
             </StackPanel>
             <Button Visibility="Hidden"           
                 Width="120" 
@@ -64,7 +93,11 @@
                     Style="{StaticResource loginButton}"
                     VerticalAlignment="Top" Margin="0,6,0,0"
                                HorizontalAlignment="Left"/>
-            <Button IsEnabled="{Binding EnableBookView}" Content="Thêm sách mới" Command="{Binding AddBookCommand}" Style="{StaticResource loginButton}" Grid.Column="1"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button IsEnabled="{Binding EnableBookView}" Content="Tìm sách" Command="{Binding FindBookCommand}" Style="{StaticResource loginButton}" Grid.Column="1" Width="67"/>
+                <Button IsEnabled="{Binding EnableBookView}" Content="Thêm sách mới" Command="{Binding AddBookCommand}" Style="{StaticResource loginButton}" Grid.Column="1" Width="136"/>
+
+            </StackPanel>
         </Grid>
         <Border Grid.Row="1"
                 CornerRadius="10" 
@@ -93,6 +126,7 @@
                             </Behaviors:EventTrigger>
                         </Behaviors:Interaction.Triggers>
                     </ComboBox>
+                    <Button Content="Sửa thể loại" Command="{Binding EditCategoryCommand}" Margin="20 0 0 0"/>
                 </StackPanel>
 
                 <ListView IsEnabled="{Binding EnableBookView}" ItemsSource="{Binding BookSourceCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10, 10, 0, 0" Name="bookListView" Margin="0 0 0 10" 
