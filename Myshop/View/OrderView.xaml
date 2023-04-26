@@ -27,7 +27,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <DatePicker ToolTip="Từ ngày"  d:Name="StartDate" DisplayDateEnd="{Binding DateMax}"
+            <DatePicker ToolTip="Từ ngày"  d:Name="StartDate" DisplayDateEnd="{Binding DateMax}" VerticalAlignment="Center"
                         SelectedDate="{Binding DateMin}" Grid.Column="0">
                 <Behaviors:Interaction.Triggers>
                     <Behaviors:EventTrigger EventName="SelectedDateChanged">
@@ -35,7 +35,7 @@
                     </Behaviors:EventTrigger>
                 </Behaviors:Interaction.Triggers>
             </DatePicker>
-            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateMax}" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}"
+            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateEnd}" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}" VerticalAlignment="Center"
                         Grid.Column="1">
                 <Behaviors:Interaction.Triggers>
                     <Behaviors:EventTrigger EventName="SelectedDateChanged">
@@ -129,7 +129,11 @@
                 <StackPanel Orientation="Horizontal">
                     <StackPanel>
                         <Label Content="Người đặt" Style="{StaticResource labelBody}"/>
-                        <Label Content="{Binding CustomerName}" d:Content="Huynh Minh Bao" Foreground="Black" FontSize="15"/>
+                        <Label Content="{Binding CustomerName}" d:Content="" Foreground="Black" FontSize="15"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <Label Content="Ngày đặt" Style="{StaticResource labelBody}"/>
+                        <Label Content="{Binding DateCreated}" d:Content="" Foreground="Black" FontSize="15"/>
                     </StackPanel>
                     <StackPanel>
                         <Label Content="Thông tin giao hàng" Style="{StaticResource labelBody}"/>

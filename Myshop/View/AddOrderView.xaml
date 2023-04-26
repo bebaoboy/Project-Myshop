@@ -29,7 +29,7 @@
             <Label Content="Danh sách các sách"/>
             <Button Content="Thêm sách" Margin="10 0" Command="{Binding AddNewBookToOrder}"/>
         </StackPanel>
-        <StackPanel>
+        <StackPanel IsEnabled="{Binding EnableView}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Height="200">
                 <ItemsControl ItemsSource="{Binding CustomControls}">
                     <ItemsControl.ItemTemplate>
@@ -37,7 +37,7 @@
                             <Border Background="FloralWhite">
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="{Binding CurrentImage}" Width="50" Height="50"/>
-                                    <ComboBox ItemsSource="{Binding BookTitles}" SelectedValue="{Binding CurrentBookName}">
+                                    <ComboBox ItemsSource="{Binding BookTitles}" MaxDropDownHeight="100" MaxWidth="150" SelectedValue="{Binding CurrentBookName}">
                                         <Behaviors:Interaction.Triggers>
                                             <Behaviors:EventTrigger EventName="SelectionChanged">
                                                 <Behaviors:CallMethodAction MethodName="SelectionChanged" TargetObject="{Binding}" />

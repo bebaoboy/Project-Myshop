@@ -14,6 +14,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
+using static Myshop.ViewModel.DashBoardViewModel;
 using static System.Reflection.Metadata.BlobBuilder;
 
 namespace Myshop.ViewModel
@@ -31,7 +32,7 @@ namespace Myshop.ViewModel
         public ICommand OpenAddNewOrder { get; }
 
         int _currentPage = 1;
-        int _rowsPerPage = 10;
+        int _rowsPerPage = 5;
         int _totalItems = 0;
         int _totalPages = 0;
 
@@ -40,6 +41,8 @@ namespace Myshop.ViewModel
         int _currentIndex = -1;
 
         ObservableCollection<Order> orderItems = new();
+        private List<Order> currentSearchResult = new();
+
         private bool _nextPageEnabled = true;
 
         public bool NextPageEnabled
@@ -88,7 +91,7 @@ namespace Myshop.ViewModel
 
         public string coverImage = "/Images/logo.png";
 
-        private string _pageInfoText = "Displaying 10/30 orders.";
+        private string _pageInfoText = "Displaying orders.";
         public string PageInfoText
         {
             get
@@ -119,7 +122,7 @@ namespace Myshop.ViewModel
         public List<BookInOrder> BookInOrders
         {
             get { return bookInOrders; }
-            set { bookInOrders = orderItems[_currentIndex].OrderedBook;
+            set { bookInOrders = value;
                 OnPropertyChanged(nameof(BookInOrders));
             }
         }
@@ -128,7 +131,7 @@ namespace Myshop.ViewModel
         public double CurrentTotalPrice
         {
             get { return _currentTotalPrice; }
-            set { _currentTotalPrice = orderItems[_currentIndex].Total;
+            set { _currentTotalPrice = value;
                 OnPropertyChanged(nameof(CurrentTotalPrice));
             }
         }
@@ -140,6 +143,17 @@ namespace Myshop.ViewModel
             set { 
                 customerName = value;
                 OnPropertyChanged(nameof(customerName));
+            }
+        }
+
+        private string dateCreated;
+        public string DateCreated
+        {
+            get { return dateCreated; }
+            set
+            {
+                dateCreated = value;
+                OnPropertyChanged(nameof(DateCreated));
             }
         }
 
@@ -260,6 +274,7 @@ namespace Myshop.ViewModel
                 _currentPage, _rowsPerPage);
             _totalPages = _totalItems / _rowsPerPage +
        (_totalItems % _rowsPerPage == 0 ? 0 : 1);
+            currentSearchResult = orders;
             orderItemsSource = new CollectionViewSource { Source = orders };
             OnPropertyChanged(nameof(orderSourceCollection));
             if (ComboBoxItemsSource != null && _totalPages != ComboBoxItemsSource.Count)
@@ -310,7 +325,8 @@ namespace Myshop.ViewModel
         {
             IEnumerable<Order> list;
 
-            list = orderItems;
+            list = orderItems.Where(x => DateTime.Compare(DateMin, DateTime.ParseExact(x.DateCreated, "dd/MM/yyyy", null)) <= 0 && DateTime.Compare(DateTime.ParseExact(x.DateCreated, "dd/MM/yyyy", null), DateEnd) <= 0)
+                .OrderByDescending(x => DateTime.ParseExact(x.DateCreated, "dd/MM/yyyy", null));
                
             if (sortAsc != null)
             {
@@ -370,16 +386,21 @@ namespace Myshop.ViewModel
 
         public void ExecuteDeleteCommand(object obj)
         {
+            if (_currentIndex == -1) return;
             DialogResult dialogResult = System.Windows.Forms.MessageBox.Show("Chắc chắn?", "Xóa đơn hàng này chứ?", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
 
-                MenuItem menuItem = (MenuItem)obj;
-
-                int i = _currentIndex;
-                if (i == -1) return;
-                orderItems.RemoveAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
-                _updateDataSource(_currentPage);
+                int index = 0;
+                for (int i = 0; i < orderItems.Count; i++)
+                {
+                    if (orderItems[i].Id == currentSearchResult[_currentIndex].Id)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                orderItems.RemoveAt(index);
                 deleteRequest();
             }
         }
@@ -387,19 +408,20 @@ namespace Myshop.ViewModel
         public async Task deleteRequest()
         {
             var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Delete, "https://hcmusshop.azurewebsites.net/api/Order/" + orderItems[_currentIndex].Id);
+            var request = new HttpRequestMessage(HttpMethod.Delete, "https://hcmusshop.azurewebsites.net/api/Order/" + currentSearchResult[_currentIndex].Id);
             using (var response = await client.SendAsync(request))
             {
                 response.EnsureSuccessStatusCode();
                 MessageBox.Show("Xóa đơn hàng", "thành công");
+                _updateDataSource(_currentPage);
             }
         }
 
         public void ExecuteEditCommand(object obj)
         {
-            Order b = orderItems.ElementAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
+            Order b = currentSearchResult.ElementAt(_currentIndex);
             EditOrderView editView = new EditOrderView();
-            var editOrderViewModel = new EditOrderViewModel(orderItems[_currentIndex]);
+            var editOrderViewModel = new EditOrderViewModel(currentSearchResult[_currentIndex]);
             editView.DataContext = editOrderViewModel;
             editView.Show();
         }
@@ -420,13 +442,32 @@ namespace Myshop.ViewModel
         public void ListSelectionChanged(object sender, EventArgs e)
         {
             System.Windows.Controls.ListView SelectBox = (System.Windows.Controls.ListView)sender;
+            if (SelectBox.SelectedIndex == -1) return;
             _currentIndex = SelectBox.SelectedIndex;
 
-            BookInOrders = orderItems[_currentIndex].OrderedBook;
-            CurrentTotalPrice = orderItems[_currentIndex].Total;
-            CustomerName = orderItems[_currentIndex].CustomerName;
-            Phone = orderItems[_currentIndex].PhoneNumber;
-            Address = orderItems[_currentIndex].Address;
+            var index = _currentIndex;
+            if (index < 0 || index >= currentSearchResult.Count) return;
+            BookInOrders = currentSearchResult[_currentIndex].OrderedBook;
+            CurrentTotalPrice = currentSearchResult[_currentIndex].Total;
+            CustomerName = currentSearchResult[_currentIndex].CustomerName;
+            Phone = currentSearchResult[_currentIndex].PhoneNumber;
+            Address = currentSearchResult[_currentIndex].Address;
+            DateCreated = currentSearchResult[_currentIndex].DateCreated;
+        }
+
+        public void CalendarChanged(object sender, EventArgs e)
+        {
+            var picker = (DatePicker)sender;
+            DateMin = picker.SelectedDate ?? DateTime.Today;
+            _updateDataSource(1);
+        }
+
+        public void CalendarSet(object sender, EventArgs e)
+        {
+            var picker = (DatePicker)sender;
+            DateEnd = picker.SelectedDate ?? DateTime.Today;
+            DateMin = DateTime.MinValue;
+            _updateDataSource(1);
         }
     }
 }

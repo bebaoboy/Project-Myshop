@@ -441,10 +441,20 @@ namespace Myshop.ViewModel
 
         public void ExecuteDeleteCommand(object obj)
         {
+            if (_currentIndex == -1) return;
             DialogResult dialogResult = System.Windows.Forms.MessageBox.Show("Chắc chắn?", "Xóa cuốn sách này chứ?", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.Yes)
             {
-                bookItems.RemoveAt(_rowsPerPage * (_currentPage - 1) + _currentIndex);
+                int index = 0;
+                for(int i = 0; i < bookItems.Count; i++)
+                {
+                    if (bookItems[i].id == currentSearchResult[_currentIndex].id)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                bookItems.RemoveAt(index);
                 _updateDataSource(_currentPage);
                 deleteRequest();
             }

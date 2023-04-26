@@ -183,7 +183,7 @@
                         </Button.Template>
                     </Button>
 
-                    <StackPanel Orientation="Horizontal"
+                    <StackPanel Visibility="Hidden" Orientation="Horizontal"
                                 HorizontalAlignment="Center"
                                 Margin="0,15,0,0">
 

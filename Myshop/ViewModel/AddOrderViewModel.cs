@@ -27,6 +27,19 @@ namespace Myshop.ViewModel
     {
 
         private ObservableCollection<Book> baseData = new();
+        private bool _enableView = false;
+        public bool EnableView
+        {
+            get
+            {
+                return _enableView;
+            }
+            set
+            {
+                _enableView = value;
+                OnPropertyChanged(nameof(EnableView));
+            }
+        }
         private string _currentName;
         public string CustomerName
         {
@@ -115,54 +128,76 @@ namespace Myshop.ViewModel
                 {
                     baseData.Clear();
                 }
+                else
+                {
+                    EnableView = true;
+                    await ReadImage();
+                    return;
+                }
                 for (int i = 0; i < json.Count; i++)
                 {
-                    var imgRequest = new HttpRequestMessage(HttpMethod.Get, json[i]["image"].ToString());
 
-                    using (var imgResponse = await client.SendAsync(imgRequest))
+                    try
                     {
-                        imgResponse.EnsureSuccessStatusCode();
-                        var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
-                        using (var stream = new MemoryStream(imgStream))
+                        var bookId = int.Parse(json[i]["id"].ToString());
+                        using var httpClient2 = new HttpClient();
+                        //var request2 = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks/getCategories/" + bookId);
+                        //using var response2 = await httpClient2.SendAsync(request2);
+                        //response2.EnsureSuccessStatusCode();
+                        //var catArray = await response2.Content.ReadAsStringAsync();
+                        //var json2 = JsonNode.Parse(catArray).AsArray();
+                        //var cats = catArray.Length == 0 ? new List<int>() : json2.Select(x => (int)x).ToList();
+                        var b = new Book()
                         {
-                            bm = Bitmap.FromStream(stream);
-                            try
-                            {
-                                var bookId = int.Parse(json[i]["id"].ToString());
-                                using var httpClient2 = new HttpClient();
-                                var request2 = new HttpRequestMessage(HttpMethod.Get, "https://hcmusshop.azurewebsites.net/api/CategoriesOfBooks/getCategories/" + bookId);
-                                using var response2 = await httpClient2.SendAsync(request2);
-                                response2.EnsureSuccessStatusCode();
-                                var catArray = await response2.Content.ReadAsStringAsync();
-                                var json2 = JsonNode.Parse(catArray).AsArray();
-                                var cats = catArray.Length == 0 ? new List<int>() : json2.Select(x => (int)x).ToList();
-                                var b = new Book()
-                                {
-                                    id = bookId,
-                                    title = json[i]["title"].ToString(),
-                                    author = json[i]["author"].ToString(),
-                                    publishedYear = int.Parse(json[i]["datePublished"].ToString()),
-                                    Amount = int.Parse(json[i]["amount"].ToString()),
-                                    price = int.Parse(json[i]["price"].ToString()),
-                                    coverImage = ConvertToBitmapSource((Bitmap)bm),
-                                    Categories = cats
-                                };
-                                if (i <= baseData.Count - 1)
-                                {
-                                    baseData[i] = b;
-                                }
-                                else
-                                {
-                                    baseData.Add(b);
-                                }
-                            }
-                            catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
+                            id = bookId,
+                            title = json[i]["title"].ToString(),
+                            author = json[i]["author"].ToString(),
+                            publishedYear = int.Parse(json[i]["datePublished"].ToString()),
+                            Amount = int.Parse(json[i]["amount"].ToString()),
+                            price = int.Parse(json[i]["price"].ToString()),
+                            ImageBase64 = json[i]["image"].ToString()
+                        };
+                        if (i <= baseData.Count - 1)
+                        {
+                            baseData[i] = b;
                         }
+                        else
+                        {
+                            baseData.Add(b);
+                        }
+
                     }
+                    catch (Exception e) { Debug.WriteLine(e.Message + e.StackTrace + json[i]); }
+
+
                 }
+                EnableView = true;
+                await ReadImage();
             }
         }
 
+        public async Task ReadImage()
+        {
+            System.Drawing.Image bm;
+            var client = new HttpClient();
+            foreach (var b in baseData)
+            {
+                var imgRequest = new HttpRequestMessage(HttpMethod.Get, b.ImageBase64);
+
+                using (var imgResponse = await client.SendAsync(imgRequest))
+                {
+                    imgResponse.EnsureSuccessStatusCode();
+                    var imgStream = await imgResponse.Content.ReadAsByteArrayAsync();
+                    using (var stream = new MemoryStream(imgStream))
+                    {
+                        bm = Bitmap.FromStream(stream);
+                        b.coverImage = ConvertToBitmapSource((Bitmap)bm);
+                    }
+                }
+                b.ImageBase64 = "";
+            }
+
+        }
         public static BitmapSource ConvertToBitmapSource(System.Drawing.Bitmap bitmap)
         {
             var bitmapData = bitmap.LockBits(

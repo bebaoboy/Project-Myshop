@@ -31,7 +31,7 @@
                     </Behaviors:EventTrigger>
                 </Behaviors:Interaction.Triggers>
             </DatePicker>
-            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateMax}" Margin="10 10 20 10" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}">
+            <DatePicker ToolTip="Đến ngày" SelectedDate="{Binding DateEnd}" Margin="10 10 20 10" Name="EndDate" DisplayDateStart="{Binding DateMin}" DisplayDateEnd="{Binding DateMax}">
                 <Behaviors:Interaction.Triggers>
                     <Behaviors:EventTrigger EventName="SelectedDateChanged">
                         <Behaviors:CallMethodAction MethodName="CalendarSet" TargetObject="{Binding}" />
