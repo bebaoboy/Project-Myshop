@@ -14,6 +14,10 @@ using System.Windows.Controls;
 using System.Diagnostics;
 using System.Windows;
 using Myshop.View;
+using System.Text.Json.Serialization;
+using System.IO;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace Myshop.ViewModel
 {
@@ -84,21 +88,47 @@ namespace Myshop.ViewModel
         public ICommand LoginCommand { get; }
         public ICommand CheckCommand { get; }
 
-        private string username;
-        private string passwordIn64;
-        private string entropyIn64;
+        private string username = "";
+        private string passwordIn64 = "";
+        private string entropyIn64 = "";
 
         //Constructor
         public LoginViewModel()
         {
             LoginCommand = new ViewModelCommand(ExecuteLoginCommand, CanExecuteLoginCommand);
             CheckCommand = new ViewModelCommand(ExecuteRememberPassowrdCommand);
+            var pathWithEnv = @"%USERPROFILE%\MyShop\config.json";
+            var filePath = Environment.ExpandEnvironmentVariables(pathWithEnv);
+            System.IO.Directory.CreateDirectory(Environment.ExpandEnvironmentVariables(@"%USERPROFILE%\MyShop"));
 
-            username = ConfigurationManager.AppSettings["Username"] ?? "";
-            passwordIn64 = ConfigurationManager.AppSettings["Password"] ?? "";
-            entropyIn64 = ConfigurationManager.AppSettings["Entropy"] ?? "";
-            RememberMe = (ConfigurationManager.AppSettings["RememberMe"] ?? "") == "true";
+            var fileStream = new FileStream(filePath, FileMode.OpenOrCreate);
+            string f = "";
+            using (var ostream = new StreamReader(fileStream))
+            {
+                f = ostream.ReadToEnd();
+            }
+            var json = f.Length != 0 ? JsonNode.Parse(f) : new JsonObject();
+            if (f.Length != 0)
+            {
+                username = json["Username"]!.ToString() ?? "";
+                passwordIn64 = json["Password"]!.ToString() ?? "";
+                entropyIn64 = json["Entropy"]!.ToString() ?? "";
+                RememberMe = (json["RememberMe"]!.ToString() ?? "") == "true";
+            }
+            else
+            {
+                json["Username"] = Username;
+                json["Password"] = passwordIn64;
+                json["Entropy"] = entropyIn64;
+                json["RememberMe"] = RememberMe ? "true" : "false";
+                json["LastScreen"] = "1";
+                using (var ostream = new StreamWriter(new FileStream(filePath, FileMode.Truncate, FileAccess.Write)))
+                {
+                    ostream.Write(JsonSerializer.Serialize(json));
+                }
+            }
             _oldRememberMe = RememberMe;
+
 
             if (passwordIn64.Length != 0)
             {
@@ -154,8 +184,15 @@ namespace Myshop.ViewModel
             Debug.WriteLine("password = " + Encoding.UTF8.GetString(currentPassword));
             {
                 // Lưu username và pass
-                var config = ConfigurationManager.OpenExeConfiguration(
-                    ConfigurationUserLevel.None);
+                var pathWithEnv = @"%USERPROFILE%\MyShop\config.json";
+                var filePath = Environment.ExpandEnvironmentVariables(pathWithEnv);
+                var fileStream = new FileStream(filePath, FileMode.OpenOrCreate);
+                string f = "";
+                using (var ostream = new StreamReader(fileStream))
+                {
+                    f = ostream.ReadToEnd();
+                }
+                var json = JsonNode.Parse(f);
 
                 // Ma hoa mat khau
                 var passwordInBytes = currentPassword;
@@ -173,13 +210,16 @@ namespace Myshop.ViewModel
 
                 var passwordIn64 = Convert.ToBase64String(cypherText);
                 var entropyIn64 = Convert.ToBase64String(entropy);
-                config.AppSettings.Settings["Username"].Value = Username;
-                config.AppSettings.Settings["Password"].Value = passwordIn64;
-                config.AppSettings.Settings["Entropy"].Value = entropyIn64;
-                config.AppSettings.Settings["RememberMe"].Value = RememberMe ? "true" : "false";
+                json["Username"] = Username;
+                json["Password"] = passwordIn64;
+                json["Entropy"] = entropyIn64;
+                json["RememberMe"] = RememberMe ? "true" : "false";
 
-                config.Save(ConfigurationSaveMode.Full);
-                ConfigurationManager.RefreshSection("appSettings");
+  
+                using (var ostream = new StreamWriter(new FileStream(filePath, FileMode.Truncate, FileAccess.Write)))
+                {
+                    ostream.Write(JsonSerializer.Serialize(json));
+                }
             }
             IsViewVisible = false;
             new MainView().Show();

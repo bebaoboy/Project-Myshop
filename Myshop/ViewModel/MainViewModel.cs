@@ -153,7 +153,15 @@ namespace Myshop.ViewModel
 
             try
             {
-                int lastScreen = int.Parse(ConfigurationManager.AppSettings["LastScreen"] ?? "1");
+                var pathWithEnv = @"%USERPROFILE%\MyShop\config.json";
+                var filePath = Environment.ExpandEnvironmentVariables(pathWithEnv);
+                string f = "";
+                using (var ostream = new StreamReader(new FileStream(filePath, FileMode.OpenOrCreate)))
+                {
+                    f = ostream.ReadToEnd();
+                }
+                var json = JsonNode.Parse(f);
+                int lastScreen = int.Parse(json["LastScreen"].ToString() ?? "1");
                 if (lastScreen == 3)
                 {
                     ExecuteShowBooksViewCommand(null);
@@ -175,12 +183,21 @@ namespace Myshop.ViewModel
 
         private void saveLastScreen(int i)
         {
-            var config = ConfigurationManager.OpenExeConfiguration(
-                    ConfigurationUserLevel.None);
-            config.AppSettings.Settings["LastScreen"].Value = i.ToString();
+            var pathWithEnv = @"%USERPROFILE%\MyShop\config.json";
+            var filePath = Environment.ExpandEnvironmentVariables(pathWithEnv);
+            string f = "";
+            using (var ostream = new StreamReader(new FileStream(filePath, FileMode.OpenOrCreate)))
+            {
+                f = ostream.ReadToEnd();
+            }
+            var json = JsonNode.Parse(f);
+            json["LastScreen"] = i.ToString();
 
-            config.Save(ConfigurationSaveMode.Full);
-            ConfigurationManager.RefreshSection("appSettings");
+            var fileStream = new FileStream(filePath, FileMode.Truncate, FileAccess.Write);
+            using (var ostream = new StreamWriter(fileStream))
+            {
+                ostream.Write(JsonSerializer.Serialize(json));
+            }
         }
 
         private async void ExecuteImportCommand(object obj)

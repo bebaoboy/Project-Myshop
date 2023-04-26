@@ -33,6 +33,7 @@
     <None Remove="BookImages\truyencotich.webp" />
     <None Remove="BookImages\vo.png" />
     <None Remove="data\BookStoreData.xlsx" />
+    <None Remove="data\config.json" />
     <None Remove="Images\back-image.png" />
     <None Remove="Images\key-icon.png" />
     <None Remove="Images\logo.png" />
@@ -41,6 +42,9 @@
 
   <ItemGroup>
     <Content Include="data\BookStoreData.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="data\config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -154,6 +158,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
