@@ -33,6 +33,7 @@
     <None Remove="BookImages\truyencotich.webp" />
     <None Remove="BookImages\vo.png" />
     <None Remove="data\BookStoreData.xlsx" />
+    <None Remove="data\BookStoreDataOld.xlsx" />
     <None Remove="data\config.json" />
     <None Remove="Images\back-image.png" />
     <None Remove="Images\key-icon.png" />
@@ -42,6 +43,9 @@
 
   <ItemGroup>
     <Content Include="data\BookStoreData.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="data\BookStoreDataOld.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="data\config.json">

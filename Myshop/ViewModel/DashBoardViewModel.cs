@@ -130,7 +130,7 @@ namespace Myshop.ViewModel
         }
         private DateTime DateEnd = DateTime.Today;
 
-        private DateTime _dateMin = DateTime.MinValue;
+        private DateTime _dateMin = new DateTime(2022, 1, 1);
 
         public DateTime DateMin
         {
@@ -244,7 +244,7 @@ namespace Myshop.ViewModel
         {
             var picker = (DatePicker)sender;
             DateEnd = picker.SelectedDate ?? DateTime.Today;
-            DateMin = DateTime.MinValue;
+            DateMin = new DateTime(2022, 1, 1);
             _profitType = ProfitType.date;
             ChartStep = 1;
             getProfit("", _profitType);
